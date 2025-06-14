@@ -40,7 +40,7 @@ function MealCard({
                 <div className="flex text-xs text-gray-500 space-x-2">
                   <span>P: {food.protein}g</span>
                   <span>C: {food.carbs}g</span>
-                  <span>G: {food.fat}g</span>
+                  <span>F: {food.fat}g</span>
                 </div>
               </div>
             </div>
@@ -48,7 +48,7 @@ function MealCard({
         </div>
       ) : (
         <div className="text-center py-6 text-gray-500 mb-4">
-          <p>Nu ai adăugat alimente pentru această masă</p>
+          <p>You haven't added any food for this meal</p>
         </div>
       )}
       
@@ -58,7 +58,7 @@ function MealCard({
         onClick={onAddFood}
         fullWidth
       >
-        Adaugă aliment
+        Add food
       </Button>
     </Card>
   );

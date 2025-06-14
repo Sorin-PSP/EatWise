@@ -22,11 +22,11 @@ function CalorieProgressCard({
     <Card className={`${className}`}>
       <div className="flex items-center mb-4">
         <FaFire className="text-primary text-xl mr-2" />
-        <h3 className="font-medium">Calorii</h3>
+        <h3 className="font-medium">Calories</h3>
       </div>
       
       <div className="flex justify-between items-center mb-2">
-        <span className="text-sm text-gray-600">Consumate</span>
+        <span className="text-sm text-gray-600">Consumed</span>
         <span className="font-medium">{consumed} kcal</span>
       </div>
       
@@ -40,12 +40,12 @@ function CalorieProgressCard({
       
       <div className="grid grid-cols-2 gap-4 mt-2">
         <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Obiectiv</div>
+          <div className="text-sm text-gray-600">Goal</div>
           <div className="font-medium text-lg">{goal} kcal</div>
         </div>
         
         <div className="bg-gray-50 p-3 rounded-lg">
-          <div className="text-sm text-gray-600">Rămase</div>
+          <div className="text-sm text-gray-600">Remaining</div>
           <div className={`font-medium text-lg ${remaining < 0 ? 'text-error' : ''}`}>
             {remaining} kcal
           </div>

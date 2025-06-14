@@ -41,8 +41,8 @@ function DashboardPage() {
              style={{backgroundImage: "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
         <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary-dark/80"></div>
         <div className="relative z-10 p-6 text-white">
-          <h2 className="text-xl font-semibold mb-2">Rezumatul zilei</h2>
-          <p className="mb-4">Continuă să menții obiceiuri sănătoase!</p>
+          <h2 className="text-xl font-semibold mb-2">Daily Summary</h2>
+          <p className="mb-4">Keep maintaining healthy habits!</p>
           <NutritionSummary date={currentDate} />
         </div>
       </div>
@@ -66,13 +66,13 @@ function DashboardPage() {
         <div className="card relative overflow-hidden">
           <div className="absolute top-0 right-0 w-1/3 h-full bg-cover bg-center opacity-10" 
                style={{backgroundImage: "url('https://images.pexels.com/photos/3621168/pexels-photo-3621168.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
-          <h3 className="font-medium mb-4 relative z-10">Sfatul zilei</h3>
+          <h3 className="font-medium mb-4 relative z-10">Tip of the Day</h3>
           <div className="relative z-10">
             <p className="text-gray-700 mb-3">
-              <span className="font-medium text-primary">Știai că?</span> Consumul de proteine te ajută să te simți sătul pentru mai mult timp și reduce pofta de gustări.
+              <span className="font-medium text-primary">Did you know?</span> Consuming protein helps you feel full for longer and reduces cravings for snacks.
             </p>
             <p className="text-gray-700">
-              Încearcă să incluzi o sursă de proteine la fiecare masă pentru a-ți menține nivelul de energie constant pe parcursul zilei.
+              Try to include a source of protein with each meal to maintain your energy levels throughout the day.
             </p>
           </div>
         </div>
@@ -95,41 +95,41 @@ function DashboardPage() {
       </div>
       
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Mesele tale</h2>
+        <h2 className="text-xl font-semibold mb-4">Your Meals</h2>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <MealSection 
             date={currentDate}
             mealType="breakfast"
-            title="Mic Dejun"
+            title="Breakfast"
             icon={<FaCoffee className="text-yellow-600" />}
           />
           
           <MealSection 
             date={currentDate}
             mealType="lunch"
-            title="Prânz"
+            title="Lunch"
             icon={<FaUtensils className="text-green-600" />}
           />
           
           <MealSection 
             date={currentDate}
             mealType="dinner"
-            title="Cină"
+            title="Dinner"
             icon={<FaMoon className="text-blue-600" />}
           />
           
           <MealSection 
             date={currentDate}
             mealType="snacks"
-            title="Gustări"
+            title="Snacks"
             icon={<FaCookie className="text-orange-600" />}
           />
         </div>
       </div>
       
       <div className="card">
-        <h3 className="font-medium mb-4">Evoluția nutrienților</h3>
+        <h3 className="font-medium mb-4">Nutrient Evolution</h3>
         <NutritionChart />
       </div>
     </div>

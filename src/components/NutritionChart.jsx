@@ -1,94 +1,81 @@
-import { useEffect, useRef } from 'react'
-import { Chart, registerables } from 'chart.js'
-import { useFood } from '../contexts/FoodContext'
-import { useUser } from '../contexts/UserContext'
-import { format, subDays, parseISO } from 'date-fns'
+import React from 'react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
-// Register Chart.js components
-Chart.register(...registerables)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 function NutritionChart() {
-  const chartRef = useRef(null)
-  const chartInstance = useRef(null)
-  const { getDailyNutrition } = useFood()
-  const { user } = useUser()
+  // Sample data for the last 7 days
+  const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   
-  useEffect(() => {
-    if (chartInstance.current) {
-      chartInstance.current.destroy()
-    }
-    
-    const ctx = chartRef.current.getContext('2d')
-    
-    // Get data for the last 7 days
-    const today = new Date()
-    const dates = Array.from({ length: 7 }, (_, i) => {
-      const date = subDays(today, 6 - i)
-      return format(date, 'yyyy-MM-dd')
-    })
-    
-    const calorieData = dates.map(date => getDailyNutrition(date).calories)
-    
-    chartInstance.current = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: dates.map(date => format(parseISO(date), 'dd/MM')),
-        datasets: [
-          {
-            label: 'Calorii consumate',
-            data: calorieData,
-            backgroundColor: 'rgba(76, 175, 80, 0.6)',
-            borderColor: 'rgba(76, 175, 80, 1)',
-            borderWidth: 1
-          },
-          {
-            label: 'Obiectiv calorii',
-            data: dates.map(() => user.dailyCalorieGoal),
-            type: 'line',
-            borderColor: 'rgba(255, 193, 7, 1)',
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0
-          }
-        ]
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Calories',
+        data: [1800, 1650, 2100, 1950, 1700, 2200, 1850],
+        borderColor: 'rgb(255, 99, 132)',
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+        tension: 0.3,
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Calorii (kcal)'
-            }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Data'
-            }
-          }
-        }
-      }
-    })
-    
-    return () => {
-      if (chartInstance.current) {
-        chartInstance.current.destroy()
-      }
-    }
-  }, [getDailyNutrition, user.dailyCalorieGoal])
+      {
+        label: 'Protein',
+        data: [90, 85, 110, 95, 80, 115, 100],
+        borderColor: 'rgb(53, 162, 235)',
+        backgroundColor: 'rgba(53, 162, 235, 0.5)',
+        tension: 0.3,
+      },
+      {
+        label: 'Carbs',
+        data: [220, 200, 250, 230, 210, 260, 225],
+        borderColor: 'rgb(255, 205, 86)',
+        backgroundColor: 'rgba(255, 205, 86, 0.5)',
+        tension: 0.3,
+      },
+    ],
+  };
   
-  return (
-    <div className="card">
-      <h2 className="text-xl font-semibold mb-4">Istoric Calorii (Ultimele 7 zile)</h2>
-      <div className="h-64">
-        <canvas ref={chartRef}></canvas>
-      </div>
-    </div>
-  )
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+    interaction: {
+      mode: 'nearest',
+      axis: 'x',
+      intersect: false
+    },
+  };
+  
+  return <Line options={options} data={data} />;
 }
 
-export default NutritionChart
+export default NutritionChart;

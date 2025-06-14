@@ -7,6 +7,7 @@ export function UserProvider({ children }) {
     name: '',
     email: '',
     isLoggedIn: false,
+    isAdmin: false,
     age: 0,
     gender: '',
     weight: 0,
@@ -41,11 +42,12 @@ export function UserProvider({ children }) {
     setUser(updatedUser)
     
     // Store auth data separately from profile data
-    if ('isLoggedIn' in userData) {
+    if ('isLoggedIn' in userData || 'isAdmin' in userData) {
       localStorage.setItem('eatwise-auth', JSON.stringify({
         name: updatedUser.name,
         email: updatedUser.email,
-        isLoggedIn: updatedUser.isLoggedIn
+        isLoggedIn: updatedUser.isLoggedIn,
+        isAdmin: updatedUser.isAdmin
       }))
     } else {
       localStorage.setItem('eatwise-user', JSON.stringify({
@@ -68,9 +70,15 @@ export function UserProvider({ children }) {
     setUser({
       ...user,
       isLoggedIn: false,
+      isAdmin: false,
       email: ''
     })
     localStorage.removeItem('eatwise-auth')
+  }
+
+  // Check if a user is an admin
+  const checkAdminCredentials = (email, password) => {
+    return email === 'yatooinformation@gmail.com' && password === '123456'
   }
 
   // Convert weight between metric and imperial
@@ -153,25 +161,32 @@ export function UserProvider({ children }) {
     return user.measurementSystem === 'metric' ? 'cm' : 'in'
   }
 
+  const value = {
+    user, 
+    setUser, 
+    updateUser,
+    logout, 
+    calculateBMR, 
+    calculateTDEE,
+    calculateCalorieGoal,
+    convertWeight,
+    convertHeight,
+    getWeightUnit,
+    getHeightUnit,
+    checkAdminCredentials
+  }
+
   return (
-    <UserContext.Provider value={{ 
-      user, 
-      setUser, 
-      updateUser,
-      logout, 
-      calculateBMR, 
-      calculateTDEE,
-      calculateCalorieGoal,
-      convertWeight,
-      convertHeight,
-      getWeightUnit,
-      getHeightUnit
-    }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   )
 }
 
 export function useUser() {
-  return useContext(UserContext)
+  const context = useContext(UserContext)
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider')
+  }
+  return context
 }

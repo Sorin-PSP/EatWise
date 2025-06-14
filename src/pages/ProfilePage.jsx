@@ -115,7 +115,7 @@ function ProfilePage() {
     // Save user data
     updateUser({ ...formData });
     
-    alert('Profilul a fost salvat cu succes!');
+    alert('Profile saved successfully!');
   };
   
   // Get the appropriate weight and height units based on the selected measurement system
@@ -124,7 +124,7 @@ function ProfilePage() {
   
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Profilul meu</h1>
+      <h1 className="text-2xl font-bold mb-6">My Profile</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div className="md:col-span-2">
@@ -135,34 +135,34 @@ function ProfilePage() {
                   <FaUser className="text-primary text-xl" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold">Informații personale</h2>
-                  <p className="text-gray-600">Actualizează-ți datele pentru un calcul precis al caloriilor</p>
+                  <h2 className="text-xl font-semibold">Personal Information</h2>
+                  <p className="text-gray-600">Update your data for accurate calorie calculations</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <Input
-                  label="Nume"
+                  label="Name"
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Numele tău"
+                  placeholder="Your name"
                 />
                 
                 <Input
-                  label="Vârstă"
+                  label="Age"
                   id="age"
                   name="age"
                   type="number"
                   value={formData.age}
                   onChange={handleChange}
-                  placeholder="Vârsta ta"
+                  placeholder="Your age"
                   icon={FaBirthdayCake}
                 />
                 
                 <div className="mb-4">
-                  <label htmlFor="gender" className="label">Gen</label>
+                  <label htmlFor="gender" className="label">Gender</label>
                   <div className="flex space-x-4">
                     <label className="flex items-center">
                       <input
@@ -173,7 +173,7 @@ function ProfilePage() {
                         onChange={handleChange}
                         className="mr-2"
                       />
-                      Feminin
+                      Female
                     </label>
                     <label className="flex items-center">
                       <input
@@ -184,13 +184,13 @@ function ProfilePage() {
                         onChange={handleChange}
                         className="mr-2"
                       />
-                      Masculin
+                      Male
                     </label>
                   </div>
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="measurementSystem" className="label">Sistem de măsurare</label>
+                  <label htmlFor="measurementSystem" className="label">Measurement System</label>
                   <div className="flex space-x-4">
                     <label className="flex items-center">
                       <input
@@ -212,41 +212,41 @@ function ProfilePage() {
                         onChange={handleChange}
                         className="mr-2"
                       />
-                      American (lb, in)
+                      Imperial (lb, in)
                     </label>
                   </div>
                 </div>
                 
                 <Input
-                  label={`Greutate (${weightUnit})`}
+                  label={`Weight (${weightUnit})`}
                   id="weight"
                   name="weight"
                   type="number"
                   value={formData.weight}
                   onChange={handleChange}
-                  placeholder={`Greutatea ta în ${weightUnit}`}
+                  placeholder={`Your weight in ${weightUnit}`}
                   icon={FaWeight}
                   helperText={formData.measurementSystem === 'metric' ? 
-                    'Introduceți greutatea în kilograme' : 
-                    'Introduceți greutatea în livre (pounds)'}
+                    'Enter weight in kilograms' : 
+                    'Enter weight in pounds'}
                 />
                 
                 <Input
-                  label={`Înălțime (${heightUnit})`}
+                  label={`Height (${heightUnit})`}
                   id="height"
                   name="height"
                   type="number"
                   value={formData.height}
                   onChange={handleChange}
-                  placeholder={`Înălțimea ta în ${heightUnit}`}
+                  placeholder={`Your height in ${heightUnit}`}
                   icon={FaRulerVertical}
                   helperText={formData.measurementSystem === 'metric' ? 
-                    'Introduceți înălțimea în centimetri' : 
-                    'Introduceți înălțimea în inchi (inches)'}
+                    'Enter height in centimeters' : 
+                    'Enter height in inches'}
                 />
                 
                 <div className="mb-4">
-                  <label htmlFor="activityLevel" className="label">Nivel de activitate</label>
+                  <label htmlFor="activityLevel" className="label">Activity Level</label>
                   <select
                     id="activityLevel"
                     name="activityLevel"
@@ -254,16 +254,16 @@ function ProfilePage() {
                     onChange={handleChange}
                     className="input"
                   >
-                    <option value="sedentary">Sedentar (activitate minimă)</option>
-                    <option value="light">Ușor activ (exerciții ușoare 1-3 zile/săptămână)</option>
-                    <option value="moderate">Moderat activ (exerciții moderate 3-5 zile/săptămână)</option>
-                    <option value="active">Foarte activ (exerciții intense 6-7 zile/săptămână)</option>
-                    <option value="veryActive">Extrem de activ (exerciții intense zilnic + muncă fizică)</option>
+                    <option value="sedentary">Sedentary (minimal activity)</option>
+                    <option value="light">Lightly active (light exercise 1-3 days/week)</option>
+                    <option value="moderate">Moderately active (moderate exercise 3-5 days/week)</option>
+                    <option value="active">Very active (intense exercise 6-7 days/week)</option>
+                    <option value="veryActive">Extremely active (intense daily exercise + physical job)</option>
                   </select>
                 </div>
                 
                 <div className="mb-4">
-                  <label htmlFor="goal" className="label">Obiectiv</label>
+                  <label htmlFor="goal" className="label">Goal</label>
                   <select
                     id="goal"
                     name="goal"
@@ -271,9 +271,9 @@ function ProfilePage() {
                     onChange={handleChange}
                     className="input"
                   >
-                    <option value="lose">Pierdere în greutate</option>
-                    <option value="maintain">Menținere greutate</option>
-                    <option value="gain">Creștere în greutate</option>
+                    <option value="lose">Weight loss</option>
+                    <option value="maintain">Maintain weight</option>
+                    <option value="gain">Weight gain</option>
                   </select>
                 </div>
               </div>
@@ -286,7 +286,7 @@ function ProfilePage() {
                   onClick={calculateCalories}
                   className="flex-1"
                 >
-                  Calculează necesarul caloric
+                  Calculate calorie needs
                 </Button>
                 
                 <Button 
@@ -295,15 +295,15 @@ function ProfilePage() {
                   icon={FaSave}
                   className="flex-1"
                 >
-                  Salvează profilul
+                  Save profile
                 </Button>
               </div>
               
               {calculatedCalories && (
                 <div className="bg-primary-light/20 p-4 rounded-lg border border-primary-light">
-                  <h3 className="font-medium text-primary-dark mb-2">Necesarul tău caloric zilnic</h3>
-                  <p>În funcție de datele tale și de obiectivul ales, necesarul tău caloric zilnic este de aproximativ:</p>
-                  <p className="text-2xl font-bold text-primary mt-2">{calculatedCalories} calorii</p>
+                  <h3 className="font-medium text-primary-dark mb-2">Your daily calorie needs</h3>
+                  <p>Based on your data and chosen goal, your daily calorie needs are approximately:</p>
+                  <p className="text-2xl font-bold text-primary mt-2">{calculatedCalories} calories</p>
                 </div>
               )}
             </form>
@@ -318,18 +318,18 @@ function ProfilePage() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6 text-white">
-              <h3 className="text-xl font-semibold mb-2">Sfaturi pentru succes</h3>
-              <p>Setează-ți obiective realiste și urmărește-ți progresul constant.</p>
+              <h3 className="text-xl font-semibold mb-2">Tips for Success</h3>
+              <p>Set realistic goals and track your progress consistently.</p>
             </div>
           </div>
           
           <Card>
-            <h3 className="font-medium mb-4">Despre calculul caloriilor</h3>
+            <h3 className="font-medium mb-4">About Calorie Calculation</h3>
             <p className="text-gray-700 mb-3">
-              Calculul necesarului caloric se bazează pe formula Mifflin-St Jeor, care este considerată una dintre cele mai precise metode de estimare a metabolismului bazal (BMR).
+              The calorie calculation is based on the Mifflin-St Jeor formula, which is considered one of the most accurate methods for estimating basal metabolic rate (BMR).
             </p>
             <p className="text-gray-700">
-              Apoi, în funcție de nivelul tău de activitate și obiectivul ales, se ajustează acest număr pentru a obține necesarul caloric zilnic total.
+              Then, based on your activity level and chosen goal, this number is adjusted to obtain your total daily calorie needs.
             </p>
           </Card>
           
@@ -338,13 +338,13 @@ function ProfilePage() {
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                 <FaGlobe className="text-blue-500" />
               </div>
-              <h3 className="font-medium">Sisteme de măsurare</h3>
+              <h3 className="font-medium">Measurement Systems</h3>
             </div>
             <p className="text-gray-700 mb-3">
-              Poți alege între sistemul metric (kg, cm) și sistemul american/imperial (lb, in) pentru măsurătorile tale.
+              You can choose between the metric system (kg, cm) and the imperial system (lb, in) for your measurements.
             </p>
             <p className="text-gray-700">
-              Toate calculele vor fi adaptate automat în funcție de sistemul ales, astfel încât să obții rezultate precise indiferent de preferința ta.
+              All calculations will be automatically adapted based on the chosen system, so you get accurate results regardless of your preference.
             </p>
           </Card>
         </div>

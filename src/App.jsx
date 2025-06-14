@@ -8,6 +8,10 @@ import ProfilePage from './pages/ProfilePage'
 import FoodDetailPage from './pages/FoodDetailPage'
 import AddFoodPage from './pages/AddFoodPage'
 import LoginPage from './pages/LoginPage'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminFoodDatabase from './pages/admin/AdminFoodDatabase'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminPayments from './pages/admin/AdminPayments'
 import { useEffect } from 'react'
 import { useUser } from './contexts/UserContext'
 
@@ -25,6 +29,14 @@ function App() {
   // Protected route component
   const ProtectedRoute = ({ children }) => {
     if (!user.isLoggedIn) {
+      return <Navigate to="/login" replace />
+    }
+    return children
+  }
+
+  // Admin route component
+  const AdminRoute = ({ children }) => {
+    if (!user.isLoggedIn || !user.isAdmin) {
       return <Navigate to="/login" replace />
     }
     return children
@@ -70,6 +82,31 @@ function App() {
           <ProtectedRoute>
             <ProfilePage />
           </ProtectedRoute>
+        } />
+        
+        {/* Admin Routes */}
+        <Route path="admin/dashboard" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
+        
+        <Route path="admin/food-database" element={
+          <AdminRoute>
+            <AdminFoodDatabase />
+          </AdminRoute>
+        } />
+        
+        <Route path="admin/users" element={
+          <AdminRoute>
+            <AdminUsers />
+          </AdminRoute>
+        } />
+        
+        <Route path="admin/payments" element={
+          <AdminRoute>
+            <AdminPayments />
+          </AdminRoute>
         } />
       </Route>
     </Routes>

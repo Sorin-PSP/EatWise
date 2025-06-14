@@ -31,12 +31,12 @@ function MealSection({ date, mealType, title, icon }) {
               </div>
               <div className="flex items-center">
                 <p className="text-xs text-gray-500 mr-3">
-                  P: {item.protein}g • C: {item.carbs}g • G: {item.fat}g
+                  P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
                 </p>
                 <button 
                   onClick={() => removeFoodFromLog(date, mealType, item.id)}
                   className="text-red-500 hover:text-red-700"
-                  aria-label="Șterge aliment"
+                  aria-label="Delete food"
                 >
                   <FaTrash />
                 </button>
@@ -45,7 +45,7 @@ function MealSection({ date, mealType, title, icon }) {
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500 text-center py-4">Nu ai adăugat alimente la {title.toLowerCase()}</p>
+        <p className="text-gray-500 text-center py-4">You haven't added any food to {title.toLowerCase()}</p>
       )}
       
       <button 
@@ -53,7 +53,7 @@ function MealSection({ date, mealType, title, icon }) {
         className="mt-4 flex items-center justify-center w-full py-2 border border-dashed border-gray-300 rounded-lg text-primary hover:bg-gray-50 transition-colors"
       >
         <FaPlus className="mr-2" />
-        <span>Adaugă aliment</span>
+        <span>Add food</span>
       </button>
       
       {showFoodSelector && (

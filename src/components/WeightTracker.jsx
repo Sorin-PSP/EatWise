@@ -1,86 +1,102 @@
-import React from 'react';
-import { FaWeight, FaChartLine } from 'react-icons/fa';
+import React, { useState } from 'react';
+import { FaWeight, FaArrowDown, FaArrowUp, FaEdit } from 'react-icons/fa';
 import Card from './Card';
-import Button from './Button';
 
 function WeightTracker({ 
-  currentWeight = 70, 
-  startWeight = 75,
-  goalWeight = 65,
-  weightUnit = 'kg',
+  currentWeight = 0, 
+  startWeight = 0,
+  goalWeight = 0,
   onUpdateWeight,
   className = '' 
 }) {
-  // Calculate progress
-  const totalToLose = startWeight - goalWeight;
-  const lost = startWeight - currentWeight;
-  const percentage = Math.min(Math.max((lost / totalToLose) * 100, 0), 100);
-
+  const [isEditing, setIsEditing] = useState(false);
+  const [weightInput, setWeightInput] = useState(currentWeight);
+  
+  const weightDiff = startWeight - currentWeight;
+  const isWeightLoss = weightDiff > 0;
+  const progressPercentage = Math.min(
+    Math.max(
+      Math.abs((startWeight - currentWeight) / (startWeight - goalWeight)) * 100, 
+      0
+    ), 
+    100
+  );
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdateWeight(weightInput);
+    setIsEditing(false);
+  };
+  
   return (
     <Card className={`${className}`}>
-      <div className="flex items-center mb-4">
-        <FaWeight className="text-primary text-xl mr-2" />
-        <h3 className="font-medium">Progres Greutate</h3>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-2 mb-6">
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">Inițial</div>
-          <div className="font-medium">{startWeight} {weightUnit}</div>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <FaWeight className="text-purple-500 text-xl mr-2" />
+          <h3 className="font-medium">Weight Tracker</h3>
         </div>
         
-        <div className="text-center p-3 bg-primary-light/20 rounded-lg border border-primary-light">
-          <div className="text-sm text-gray-600">Actual</div>
-          <div className="font-medium text-primary-dark">{currentWeight} {weightUnit}</div>
-        </div>
-        
-        <div className="text-center p-3 bg-gray-50 rounded-lg">
-          <div className="text-sm text-gray-600">Obiectiv</div>
-          <div className="font-medium">{goalWeight} {weightUnit}</div>
-        </div>
+        <button 
+          onClick={() => setIsEditing(!isEditing)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <FaEdit />
+        </button>
       </div>
       
-      <div className="mb-6">
-        <div className="flex justify-between text-sm mb-1">
-          <span>Progres</span>
-          <span>{Math.round(percentage)}%</span>
+      {isEditing ? (
+        <form onSubmit={handleSubmit} className="mb-4">
+          <div className="flex items-center">
+            <input
+              type="number"
+              step="0.1"
+              value={weightInput}
+              onChange={(e) => setWeightInput(parseFloat(e.target.value))}
+              className="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              min="0"
+            />
+            <button 
+              type="submit"
+              className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary-dark"
+            >
+              Update
+            </button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-3xl font-bold">{currentWeight}</span>
+          <span className="text-xl ml-1">kg</span>
+          
+          {weightDiff !== 0 && (
+            <div className={`ml-3 flex items-center ${isWeightLoss ? 'text-green-500' : 'text-red-500'}`}>
+              {isWeightLoss ? <FaArrowDown className="mr-1" /> : <FaArrowUp className="mr-1" />}
+              <span>{Math.abs(weightDiff).toFixed(1)} kg</span>
+            </div>
+          )}
+        </div>
+      )}
+      
+      <div className="mb-4">
+        <div className="flex justify-between text-sm text-gray-600 mb-1">
+          <span>Start: {startWeight} kg</span>
+          <span>Goal: {goalWeight} kg</span>
         </div>
         
         <div className="w-full bg-gray-200 rounded-full h-2.5">
           <div 
-            className="bg-primary h-2.5 rounded-full"
-            style={{ width: `${percentage}%` }}
+            className="bg-purple-500 h-2.5 rounded-full" 
+            style={{ width: `${progressPercentage}%` }}
           ></div>
-        </div>
-        
-        <div className="text-sm text-gray-600 mt-2">
-          {lost > 0 ? (
-            <span>Ai pierdut <span className="text-success font-medium">{lost.toFixed(1)} {weightUnit}</span> până acum!</span>
-          ) : lost < 0 ? (
-            <span>Ai câștigat <span className="text-warning font-medium">{Math.abs(lost).toFixed(1)} {weightUnit}</span> față de greutatea inițială.</span>
-          ) : (
-            <span>Nu ai înregistrat încă nicio schimbare de greutate.</span>
-          )}
         </div>
       </div>
       
-      <div className="flex space-x-4">
-        <Button 
-          variant="outline" 
-          icon={FaWeight} 
-          onClick={onUpdateWeight}
-          className="flex-1"
-        >
-          Actualizează
-        </Button>
-        
-        <Button 
-          variant="primary" 
-          icon={FaChartLine} 
-          className="flex-1"
-        >
-          Istoric
-        </Button>
+      <div className="text-center text-sm text-gray-600">
+        {progressPercentage < 100 ? (
+          <span>{(startWeight - goalWeight - weightDiff).toFixed(1)} kg to go</span>
+        ) : (
+          <span>Congratulations! You've reached your goal!</span>
+        )}
       </div>
     </Card>
   );

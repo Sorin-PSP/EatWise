@@ -15,14 +15,14 @@ function HomePage() {
           </svg>
         </div>
         
-        <h1 className="text-2xl font-bold mb-2 relative z-10">Bine ai venit la EatWise!</h1>
-        <p className="mb-4 relative z-10">Aplicația ta personală pentru calculul și urmărirea caloriilor.</p>
+        <h1 className="text-2xl font-bold mb-2 relative z-10">Welcome to EatWise!</h1>
+        <p className="mb-4 relative z-10">Your personal calorie tracking and monitoring application.</p>
         
         {user.isLoggedIn ? (
-          <p className="relative z-10">Salut, <strong>{user.name}</strong>! Obiectivul tău zilnic este de <strong>{user.dailyCalorieGoal} calorii</strong>.</p>
+          <p className="relative z-10">Hello, <strong>{user.name}</strong>! Your daily goal is <strong>{user.dailyCalorieGoal} calories</strong>.</p>
         ) : (
           <Link to="/login" className="btn bg-white text-primary hover:bg-gray-100 inline-block relative z-10">
-            Conectează-te pentru a începe
+            Login to get started
           </Link>
         )}
       </div>
@@ -38,7 +38,7 @@ function HomePage() {
               </div>
               <div className="relative z-10">
                 <h2 className="text-lg font-semibold">Dashboard</h2>
-                <p className="text-gray-600">Vizualizează progresul și statisticile tale</p>
+                <p className="text-gray-600">View your progress and statistics</p>
               </div>
             </Link>
             
@@ -49,8 +49,8 @@ function HomePage() {
                 <FaUtensils className="text-secondary text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Bază de Date Alimente</h2>
-                <p className="text-gray-600">Caută și adaugă alimente în jurnalul tău</p>
+                <h2 className="text-lg font-semibold">Food Database</h2>
+                <p className="text-gray-600">Search and add foods to your journal</p>
               </div>
             </Link>
             
@@ -61,8 +61,8 @@ function HomePage() {
                 <FaCalendarAlt className="text-blue-500 text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Planificator Mese</h2>
-                <p className="text-gray-600">Planifică-ți mesele și urmărește nutrienții</p>
+                <h2 className="text-lg font-semibold">Meal Planner</h2>
+                <p className="text-gray-600">Plan your meals and track nutrients</p>
               </div>
             </Link>
             
@@ -73,8 +73,8 @@ function HomePage() {
                 <FaUser className="text-purple-500 text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Profil</h2>
-                <p className="text-gray-600">Actualizează-ți datele și obiectivele</p>
+                <h2 className="text-lg font-semibold">Profile</h2>
+                <p className="text-gray-600">Update your data and goals</p>
               </div>
             </Link>
           </>
@@ -87,8 +87,8 @@ function HomePage() {
                 <FaChartBar className="text-primary text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Dashboard personalizat</h2>
-                <p className="text-gray-600">Urmărește progresul și statisticile tale zilnice</p>
+                <h2 className="text-lg font-semibold">Personalized Dashboard</h2>
+                <p className="text-gray-600">Track your progress and daily statistics</p>
               </div>
             </div>
             
@@ -99,8 +99,8 @@ function HomePage() {
                 <FaUtensils className="text-secondary text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Bază de date completă</h2>
-                <p className="text-gray-600">Acces la mii de alimente cu informații nutriționale</p>
+                <h2 className="text-lg font-semibold">Complete Food Database</h2>
+                <p className="text-gray-600">Access thousands of foods with nutritional information</p>
               </div>
             </div>
             
@@ -111,8 +111,8 @@ function HomePage() {
                 <FaSignInAlt className="text-secondary text-xl" />
               </div>
               <div className="relative z-10">
-                <h2 className="text-lg font-semibold">Conectează-te pentru a accesa toate funcționalitățile</h2>
-                <p className="text-gray-600">Creează un cont gratuit sau conectează-te pentru a începe</p>
+                <h2 className="text-lg font-semibold">Login to access all features</h2>
+                <p className="text-gray-600">Create a free account or login to get started</p>
               </div>
             </Link>
           </>
@@ -123,19 +123,19 @@ function HomePage() {
         <div className="card md:col-span-2 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-1/3 h-full bg-cover bg-center opacity-20 rounded-r-xl" 
                style={{backgroundImage: "url('https://images.pexels.com/photos/1640770/pexels-photo-1640770.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
-          <h2 className="text-xl font-semibold mb-4 relative z-10">Despre EatWise</h2>
+          <h2 className="text-xl font-semibold mb-4 relative z-10">About EatWise</h2>
           <p className="mb-3 relative z-10">
-            EatWise este aplicația ta personală pentru calculul și urmărirea caloriilor. Cu EatWise, poți:
+            EatWise is your personal calorie tracking and nutrition monitoring application. With EatWise, you can:
           </p>
           <ul className="list-disc pl-5 mb-3 space-y-1 relative z-10">
-            <li>Urmări aportul zilnic de calorii și nutrienți</li>
-            <li>Accesa o bază de date cu alimente și valorile lor nutriționale</li>
-            <li>Planifica mesele în avans</li>
-            <li>Vizualiza statistici și progresul tău</li>
-            <li>Seta obiective personalizate de nutriție</li>
+            <li>Track your daily calorie and nutrient intake</li>
+            <li>Access a database of foods and their nutritional values</li>
+            <li>Plan meals in advance</li>
+            <li>View statistics and your progress</li>
+            <li>Set personalized nutrition goals</li>
           </ul>
           <p className="relative z-10">
-            EatWise funcționează și offline, astfel încât să poți urmări alimentația ta oriunde te-ai afla!
+            EatWise works offline too, so you can track your nutrition wherever you are!
           </p>
         </div>
         
@@ -148,16 +148,16 @@ function HomePage() {
             />
           </div>
           <div>
-            <h3 className="font-medium mb-2">Inspirație zilnică</h3>
+            <h3 className="font-medium mb-2">Daily Inspiration</h3>
             <p className="text-gray-600 text-sm">
-              "Alimentația sănătoasă nu înseamnă restricții severe, ci înseamnă să te simți minunat, să ai mai multă energie și să-ți stabilizezi starea de spirit."
+              "Healthy eating isn't about strict limitations, but about feeling great, having more energy, and stabilizing your mood."
             </p>
           </div>
         </div>
       </div>
       
       <div className="card">
-        <h2 className="text-xl font-semibold mb-4">Galerie de inspirație</h2>
+        <h2 className="text-xl font-semibold mb-4">Inspiration Gallery</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="rounded-lg overflow-hidden h-32">
             <img 

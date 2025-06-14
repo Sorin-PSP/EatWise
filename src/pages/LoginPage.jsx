@@ -18,7 +18,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { updateUser } = useUser();
+  const { updateUser, checkAdminCredentials } = useUser();
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,12 +62,16 @@ function LoginPage() {
     // Simulate API call
     setTimeout(() => {
       if (isLogin) {
+        // Check if this is the admin account
+        const isAdmin = checkAdminCredentials(formData.email, formData.password);
+        
         // In a real app, you would verify credentials with your backend
         // For demo purposes, we'll just simulate a successful login
         const userData = {
-          name: 'Utilizator Demo',
+          name: isAdmin ? 'Administrator' : 'Utilizator Demo',
           email: formData.email,
-          isLoggedIn: true
+          isLoggedIn: true,
+          isAdmin: isAdmin
         };
         
         // Save to context and localStorage
@@ -82,7 +86,8 @@ function LoginPage() {
         const userData = {
           name: formData.name,
           email: formData.email,
-          isLoggedIn: true
+          isLoggedIn: true,
+          isAdmin: false
         };
         
         // Save to context and localStorage

@@ -16,14 +16,14 @@ function NutritionSummary({ date }) {
   
   return (
     <div className="card mb-6">
-      <h2 className="text-xl font-semibold mb-4">Rezumat Nutrițional</h2>
+      <h2 className="text-xl font-semibold mb-4">Nutritional Summary</h2>
       
       <div className="space-y-4">
         <div>
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center">
               <FaFire className="text-orange-500 mr-2" />
-              <span>Calorii</span>
+              <span>Calories</span>
             </div>
             <span className="font-medium">{nutrition.calories} / {user.dailyCalorieGoal} kcal</span>
           </div>
@@ -39,7 +39,7 @@ function NutritionSummary({ date }) {
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center">
               <FaDrumstickBite className="text-red-500 mr-2" />
-              <span>Proteine</span>
+              <span>Protein</span>
             </div>
             <span className="font-medium">{nutrition.protein} / {user.dailyProteinGoal} g</span>
           </div>
@@ -55,7 +55,7 @@ function NutritionSummary({ date }) {
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center">
               <FaBreadSlice className="text-yellow-500 mr-2" />
-              <span>Carbohidrați</span>
+              <span>Carbs</span>
             </div>
             <span className="font-medium">{nutrition.carbs} / {user.dailyCarbsGoal} g</span>
           </div>
@@ -71,7 +71,7 @@ function NutritionSummary({ date }) {
           <div className="flex justify-between items-center mb-1">
             <div className="flex items-center">
               <FaOilCan className="text-blue-500 mr-2" />
-              <span>Grăsimi</span>
+              <span>Fat</span>
             </div>
             <span className="font-medium">{nutrition.fat} / {user.dailyFatGoal} g</span>
           </div>

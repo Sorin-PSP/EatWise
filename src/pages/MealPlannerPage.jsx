@@ -10,51 +10,51 @@ function MealPlannerPage() {
   // Sample meal data
   const meals = {
     breakfast: {
-      title: 'Mic Dejun',
+      title: 'Breakfast',
       time: '07:30',
       calories: 420,
       foods: [
-        { name: 'Iaurt grecesc', amount: 200, unit: 'g', calories: 120, protein: 20, carbs: 7, fat: 0.8 },
+        { name: 'Greek Yogurt', amount: 200, unit: 'g', calories: 120, protein: 20, carbs: 7, fat: 0.8 },
         { name: 'Granola', amount: 50, unit: 'g', calories: 220, protein: 5, carbs: 30, fat: 8 },
-        { name: 'Afine', amount: 100, unit: 'g', calories: 80, protein: 1, carbs: 18, fat: 0.5 }
+        { name: 'Blueberries', amount: 100, unit: 'g', calories: 80, protein: 1, carbs: 18, fat: 0.5 }
       ]
     },
     lunch: {
-      title: 'Prânz',
+      title: 'Lunch',
       time: '13:00',
       calories: 650,
       foods: [
-        { name: 'Piept de pui', amount: 150, unit: 'g', calories: 250, protein: 47, carbs: 0, fat: 5.4 },
-        { name: 'Orez brun', amount: 100, unit: 'g', calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9 },
+        { name: 'Chicken Breast', amount: 150, unit: 'g', calories: 250, protein: 47, carbs: 0, fat: 5.4 },
+        { name: 'Brown Rice', amount: 100, unit: 'g', calories: 112, protein: 2.6, carbs: 23.5, fat: 0.9 },
         { name: 'Broccoli', amount: 150, unit: 'g', calories: 51, protein: 4.2, carbs: 9.9, fat: 0.6 },
-        { name: 'Ulei de măsline', amount: 10, unit: 'ml', calories: 90, protein: 0, carbs: 0, fat: 10 }
+        { name: 'Olive Oil', amount: 10, unit: 'ml', calories: 90, protein: 0, carbs: 0, fat: 10 }
       ]
     },
     dinner: {
-      title: 'Cină',
+      title: 'Dinner',
       time: '19:30',
       calories: 580,
       foods: [
-        { name: 'Somon', amount: 150, unit: 'g', calories: 280, protein: 39, carbs: 0, fat: 13.5 },
-        { name: 'Cartofi dulci', amount: 150, unit: 'g', calories: 135, protein: 2.1, carbs: 31.5, fat: 0.1 },
-        { name: 'Salată mixtă', amount: 100, unit: 'g', calories: 25, protein: 1.5, carbs: 4, fat: 0.3 },
-        { name: 'Dressing de iaurt', amount: 30, unit: 'g', calories: 45, protein: 1.5, carbs: 2, fat: 3 }
+        { name: 'Salmon', amount: 150, unit: 'g', calories: 280, protein: 39, carbs: 0, fat: 13.5 },
+        { name: 'Sweet Potatoes', amount: 150, unit: 'g', calories: 135, protein: 2.1, carbs: 31.5, fat: 0.1 },
+        { name: 'Mixed Salad', amount: 100, unit: 'g', calories: 25, protein: 1.5, carbs: 4, fat: 0.3 },
+        { name: 'Yogurt Dressing', amount: 30, unit: 'g', calories: 45, protein: 1.5, carbs: 2, fat: 3 }
       ]
     },
     snacks: {
-      title: 'Gustări',
+      title: 'Snacks',
       time: '',
       calories: 280,
       foods: [
-        { name: 'Mere', amount: 1, unit: 'buc', calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
-        { name: 'Migdale', amount: 30, unit: 'g', calories: 185, protein: 6, carbs: 6, fat: 16 }
+        { name: 'Apple', amount: 1, unit: 'pcs', calories: 95, protein: 0.5, carbs: 25, fat: 0.3 },
+        { name: 'Almonds', amount: 30, unit: 'g', calories: 185, protein: 6, carbs: 6, fat: 16 }
       ]
     }
   };
   
   // Format date for display
   const formatDate = (date) => {
-    return date.toLocaleDateString('ro-RO', { weekday: 'long', day: 'numeric', month: 'long' });
+    return date.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' });
   };
   
   // Handle date change
@@ -71,7 +71,7 @@ function MealPlannerPage() {
   
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Planificator Mese</h1>
+      <h1 className="text-2xl font-bold mb-6">Meal Planner</h1>
       
       <div className="relative rounded-xl overflow-hidden mb-6">
         <div className="absolute inset-0 bg-cover bg-center opacity-80" 
@@ -90,14 +90,14 @@ function MealPlannerPage() {
                 className="bg-white/20 border-white/40 text-white hover:bg-white/30"
                 onClick={() => changeDate(-1)}
               >
-                Ziua anterioară
+                Previous Day
               </Button>
               <Button 
                 variant="outline" 
                 className="bg-white/20 border-white/40 text-white hover:bg-white/30"
                 onClick={() => changeDate(1)}
               >
-                Ziua următoare
+                Next Day
               </Button>
             </div>
           </div>
@@ -111,21 +111,21 @@ function MealPlannerPage() {
               <FaUtensils className="text-primary" />
             </div>
             <div>
-              <h3 className="font-medium">Rezumat nutrițional</h3>
-              <p className="text-sm text-gray-500">Total pentru {formatDate(selectedDate)}</p>
+              <h3 className="font-medium">Nutritional Summary</h3>
+              <p className="text-sm text-gray-500">Total for {formatDate(selectedDate)}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Total calorii</div>
+              <div className="text-sm text-gray-600 mb-1">Total calories</div>
               <div className="font-bold text-2xl text-primary">
                 {Object.values(meals).reduce((sum, meal) => sum + meal.calories, 0)} kcal
               </div>
             </div>
             
             <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-sm text-gray-600 mb-1">Mese planificate</div>
+              <div className="text-sm text-gray-600 mb-1">Planned meals</div>
               <div className="font-bold text-2xl">{Object.keys(meals).length}</div>
             </div>
           </div>
@@ -136,7 +136,7 @@ function MealPlannerPage() {
                 {Object.values(meals).reduce((sum, meal) => 
                   sum + meal.foods.reduce((s, food) => s + food.protein, 0), 0).toFixed(0)}g
               </div>
-              <div className="text-xs text-gray-600">Proteine</div>
+              <div className="text-xs text-gray-600">Protein</div>
             </div>
             
             <div className="p-3 bg-secondary-light/20 rounded-lg">
@@ -144,7 +144,7 @@ function MealPlannerPage() {
                 {Object.values(meals).reduce((sum, meal) => 
                   sum + meal.foods.reduce((s, food) => s + food.carbs, 0), 0).toFixed(0)}g
               </div>
-              <div className="text-xs text-gray-600">Carbohidrați</div>
+              <div className="text-xs text-gray-600">Carbs</div>
             </div>
             
             <div className="p-3 bg-warning-light/20 rounded-lg">
@@ -152,7 +152,7 @@ function MealPlannerPage() {
                 {Object.values(meals).reduce((sum, meal) => 
                   sum + meal.foods.reduce((s, food) => s + food.fat, 0), 0).toFixed(0)}g
               </div>
-              <div className="text-xs text-gray-600">Grăsimi</div>
+              <div className="text-xs text-gray-600">Fat</div>
             </div>
           </div>
         </div>
@@ -164,10 +164,10 @@ function MealPlannerPage() {
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6 text-white">
-            <h3 className="text-xl font-semibold mb-2">Planifică-ți mesele în avans</h3>
-            <p className="mb-4">Planificarea meselor te ajută să menții o alimentație echilibrată și să economisești timp.</p>
+            <h3 className="text-xl font-semibold mb-2">Plan your meals in advance</h3>
+            <p className="mb-4">Meal planning helps you maintain a balanced diet and save time.</p>
             <Button variant="secondary" icon={FaPlus}>
-              Creează un plan săptămânal
+              Create a weekly plan
             </Button>
           </div>
         </div>

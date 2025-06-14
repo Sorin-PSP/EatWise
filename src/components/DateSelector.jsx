@@ -1,9 +1,9 @@
 import { format, addDays, subDays, parseISO } from 'date-fns'
-import { ro } from 'date-fns/locale'
+import { enUS } from 'date-fns/locale'
 import { FaChevronLeft, FaChevronRight, FaCalendarAlt } from 'react-icons/fa'
 
 function DateSelector({ currentDate, setCurrentDate }) {
-  const formattedDate = format(parseISO(currentDate), 'EEEE, d MMMM yyyy', { locale: ro })
+  const formattedDate = format(parseISO(currentDate), 'EEEE, MMMM d, yyyy', { locale: enUS })
   
   const goToPreviousDay = () => {
     const newDate = subDays(parseISO(currentDate), 1)
@@ -24,7 +24,7 @@ function DateSelector({ currentDate, setCurrentDate }) {
       <button 
         onClick={goToPreviousDay}
         className="p-2 rounded-full hover:bg-gray-200"
-        aria-label="Ziua anterioară"
+        aria-label="Previous day"
       >
         <FaChevronLeft />
       </button>
@@ -35,7 +35,7 @@ function DateSelector({ currentDate, setCurrentDate }) {
           className="flex items-center mr-2 text-primary hover:text-primary-dark"
         >
           <FaCalendarAlt className="mr-1" />
-          <span className="text-sm">Azi</span>
+          <span className="text-sm">Today</span>
         </button>
         <h2 className="text-lg font-medium capitalize">{formattedDate}</h2>
       </div>
@@ -43,7 +43,7 @@ function DateSelector({ currentDate, setCurrentDate }) {
       <button 
         onClick={goToNextDay}
         className="p-2 rounded-full hover:bg-gray-200"
-        aria-label="Ziua următoare"
+        aria-label="Next day"
       >
         <FaChevronRight />
       </button>

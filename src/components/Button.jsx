@@ -6,31 +6,32 @@ function Button({
   type = 'button', 
   variant = 'primary', 
   size = 'md', 
-  className = '',
-  icon: Icon,
-  iconPosition = 'left',
+  className = '', 
   disabled = false,
   fullWidth = false,
-  ...props 
+  icon: Icon = null,
+  iconPosition = 'left'
 }) {
   const getVariantClasses = () => {
     switch (variant) {
       case 'primary':
-        return 'btn-primary';
+        return 'bg-primary hover:bg-primary-dark text-white';
       case 'secondary':
-        return 'btn-secondary';
-      case 'outline':
-        return 'btn-outline';
-      case 'text':
-        return 'bg-transparent hover:bg-gray-100 text-primary hover:text-primary-dark';
+        return 'bg-secondary hover:bg-secondary-dark text-white';
+      case 'accent':
+        return 'bg-accent hover:bg-accent-dark text-white';
       case 'success':
         return 'bg-success hover:bg-success-dark text-white';
       case 'warning':
-        return 'bg-warning hover:bg-warning-dark text-gray-900';
+        return 'bg-warning hover:bg-warning-dark text-white';
       case 'error':
         return 'bg-error hover:bg-error-dark text-white';
+      case 'outline':
+        return 'bg-transparent border border-primary text-primary hover:bg-primary/5';
+      case 'ghost':
+        return 'bg-transparent hover:bg-gray-100 text-gray-700';
       default:
-        return 'btn-primary';
+        return 'bg-primary hover:bg-primary-dark text-white';
     }
   };
 
@@ -41,13 +42,13 @@ function Button({
       case 'sm':
         return 'text-sm px-3 py-1.5';
       case 'md':
-        return 'text-base px-4 py-2.5';
+        return 'text-base px-4 py-2';
       case 'lg':
-        return 'text-lg px-5 py-3';
+        return 'text-lg px-5 py-2.5';
       case 'xl':
-        return 'text-xl px-6 py-3.5';
+        return 'text-xl px-6 py-3';
       default:
-        return 'text-base px-4 py-2.5';
+        return 'text-base px-4 py-2';
     }
   };
 
@@ -57,14 +58,15 @@ function Button({
       onClick={onClick}
       disabled={disabled}
       className={`
-        ${getVariantClasses()} 
-        ${getSizeClasses()} 
-        ${fullWidth ? 'w-full' : ''} 
-        ${disabled ? 'opacity-60 cursor-not-allowed' : ''}
+        ${getVariantClasses()}
+        ${getSizeClasses()}
+        ${fullWidth ? 'w-full' : ''}
+        rounded-md font-medium transition-colors duration-200
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+        disabled:opacity-50 disabled:cursor-not-allowed
         flex items-center justify-center
         ${className}
       `}
-      {...props}
     >
       {Icon && iconPosition === 'left' && (
         <Icon className={`${children ? 'mr-2' : ''}`} />

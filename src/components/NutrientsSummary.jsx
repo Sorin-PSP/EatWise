@@ -13,27 +13,27 @@ function NutrientsSummary({
 }) {
   return (
     <Card className={`${className}`}>
-      <h3 className="font-medium mb-4">Macronutrienți</h3>
+      <h3 className="font-medium mb-4">Macronutrients</h3>
       
       <div className="flex flex-wrap justify-around">
         <NutrientProgressCircle
           value={protein}
           max={proteinGoal}
-          title="Proteine"
+          title="Protein"
           color="primary"
         />
         
         <NutrientProgressCircle
           value={carbs}
           max={carbsGoal}
-          title="Carbohidrați"
+          title="Carbs"
           color="secondary"
         />
         
         <NutrientProgressCircle
           value={fat}
           max={fatGoal}
-          title="Grăsimi"
+          title="Fat"
           color="accent"
         />
       </div>

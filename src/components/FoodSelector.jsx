@@ -25,7 +25,7 @@ function FoodSelector({ date, mealType, onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl w-full max-w-md max-h-[80vh] flex flex-col">
         <div className="p-4 border-b flex justify-between items-center">
-          <h3 className="text-lg font-medium">Adaugă aliment</h3>
+          <h3 className="text-lg font-medium">Add Food</h3>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -38,7 +38,7 @@ function FoodSelector({ date, mealType, onClose }) {
           <div className="relative">
             <input
               type="text"
-              placeholder="Caută aliment..."
+              placeholder="Search food..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input pl-10"
@@ -60,14 +60,14 @@ function FoodSelector({ date, mealType, onClose }) {
                   <p className="text-gray-600">{food.calories} kcal/{food.serving}{food.unit}</p>
                 </div>
                 <p className="text-sm text-gray-500">
-                  P: {food.protein}g • C: {food.carbs}g • G: {food.fat}g
+                  P: {food.protein}g • C: {food.carbs}g • F: {food.fat}g
                 </p>
               </li>
             ))}
             
             {filteredFoods.length === 0 && (
               <li className="p-4 text-center text-gray-500">
-                Nu s-au găsit alimente. Încearcă alt termen de căutare.
+                No foods found. Try a different search term.
               </li>
             )}
           </ul>
@@ -77,7 +77,7 @@ function FoodSelector({ date, mealType, onClose }) {
           <div className="p-4 border-t">
             <div className="mb-4">
               <label htmlFor="quantity" className="label">
-                Cantitate ({selectedFood.unit})
+                Quantity ({selectedFood.unit})
               </label>
               <input
                 id="quantity"
@@ -90,17 +90,17 @@ function FoodSelector({ date, mealType, onClose }) {
             </div>
             
             <div className="text-sm mb-4">
-              <p>Calorii: {Math.round((selectedFood.calories * quantity) / selectedFood.serving)} kcal</p>
-              <p>Proteine: {Math.round((selectedFood.protein * quantity) / selectedFood.serving * 10) / 10}g</p>
-              <p>Carbohidrați: {Math.round((selectedFood.carbs * quantity) / selectedFood.serving * 10) / 10}g</p>
-              <p>Grăsimi: {Math.round((selectedFood.fat * quantity) / selectedFood.serving * 10) / 10}g</p>
+              <p>Calories: {Math.round((selectedFood.calories * quantity) / selectedFood.serving)} kcal</p>
+              <p>Protein: {Math.round((selectedFood.protein * quantity) / selectedFood.serving * 10) / 10}g</p>
+              <p>Carbs: {Math.round((selectedFood.carbs * quantity) / selectedFood.serving * 10) / 10}g</p>
+              <p>Fat: {Math.round((selectedFood.fat * quantity) / selectedFood.serving * 10) / 10}g</p>
             </div>
             
             <button 
               onClick={handleAddFood}
               className="btn-primary w-full"
             >
-              Adaugă
+              Add
             </button>
           </div>
         )}
