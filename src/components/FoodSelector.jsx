@@ -41,7 +41,7 @@ function FoodSelector({ date, mealType, onClose }) {
               placeholder="Search food..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="input pl-10"
+              className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
             />
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
@@ -76,7 +76,7 @@ function FoodSelector({ date, mealType, onClose }) {
         {selectedFood && (
           <div className="p-4 border-t">
             <div className="mb-4">
-              <label htmlFor="quantity" className="label">
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
                 Quantity ({selectedFood.unit})
               </label>
               <input
@@ -85,7 +85,7 @@ function FoodSelector({ date, mealType, onClose }) {
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(Number(e.target.value))}
-                className="input"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
             </div>
             
@@ -98,7 +98,7 @@ function FoodSelector({ date, mealType, onClose }) {
             
             <button 
               onClick={handleAddFood}
-              className="btn-primary w-full"
+              className="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary-dark transition-colors"
             >
               Add
             </button>

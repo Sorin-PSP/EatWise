@@ -75,25 +75,44 @@ export function FoodProvider({ children }) {
   useEffect(() => {
     const savedFoods = localStorage.getItem('eatwise-foods')
     if (savedFoods) {
-      setFoods(JSON.parse(savedFoods))
+      try {
+        const parsedFoods = JSON.parse(savedFoods)
+        setFoods(parsedFoods)
+        console.log('Loaded foods from localStorage:', parsedFoods.length)
+      } catch (error) {
+        console.error('Error parsing saved foods:', error)
+        setFoods(initialFoods)
+        localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
+      }
     } else {
+      console.log('No saved foods found, using initial foods')
       setFoods(initialFoods)
       localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
     }
     
     const savedDailyLog = localStorage.getItem('eatwise-dailyLog')
     if (savedDailyLog) {
-      setDailyLog(JSON.parse(savedDailyLog))
+      try {
+        setDailyLog(JSON.parse(savedDailyLog))
+      } catch (error) {
+        console.error('Error parsing saved daily log:', error)
+        setDailyLog({})
+      }
     }
   }, [])
 
   // Save to localStorage whenever foods or dailyLog changes
   useEffect(() => {
-    localStorage.setItem('eatwise-foods', JSON.stringify(foods))
+    if (foods.length > 0) {
+      console.log('Saving foods to localStorage:', foods.length)
+      localStorage.setItem('eatwise-foods', JSON.stringify(foods))
+    }
   }, [foods])
   
   useEffect(() => {
-    localStorage.setItem('eatwise-dailyLog', JSON.stringify(dailyLog))
+    if (Object.keys(dailyLog).length > 0) {
+      localStorage.setItem('eatwise-dailyLog', JSON.stringify(dailyLog))
+    }
   }, [dailyLog])
 
   const addFood = (newFood) => {
@@ -101,16 +120,33 @@ export function FoodProvider({ children }) {
       ...newFood,
       id: Date.now().toString()
     }
-    setFoods([...foods, foodWithId])
+    
+    console.log('Adding new food:', foodWithId)
+    
+    // Update state with the new food
+    const updatedFoods = [...foods, foodWithId]
+    setFoods(updatedFoods)
+    
+    // Immediately save to localStorage for redundancy
+    localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
+    
     return foodWithId
   }
 
   const updateFood = (id, updatedFood) => {
-    setFoods(foods.map(food => food.id === id ? { ...food, ...updatedFood } : food))
+    const updatedFoods = foods.map(food => food.id === id ? { ...food, ...updatedFood } : food)
+    setFoods(updatedFoods)
+    
+    // Immediately save to localStorage
+    localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
   }
 
   const deleteFood = (id) => {
-    setFoods(foods.filter(food => food.id !== id))
+    const filteredFoods = foods.filter(food => food.id !== id)
+    setFoods(filteredFoods)
+    
+    // Immediately save to localStorage
+    localStorage.setItem('eatwise-foods', JSON.stringify(filteredFoods))
   }
 
   const getFood = (id) => {
@@ -141,6 +177,9 @@ export function FoodProvider({ children }) {
     }
     
     setDailyLog(updatedLog)
+    
+    // Immediately save to localStorage
+    localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog))
   }
 
   const removeFoodFromLog = (date, mealType, logItemId) => {
@@ -148,13 +187,18 @@ export function FoodProvider({ children }) {
     
     const updatedMeal = dailyLog[date][mealType].filter(item => item.id !== logItemId)
     
-    setDailyLog({
+    const updatedLog = {
       ...dailyLog,
       [date]: {
         ...dailyLog[date],
         [mealType]: updatedMeal
       }
-    })
+    }
+    
+    setDailyLog(updatedLog)
+    
+    // Immediately save to localStorage
+    localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog))
   }
 
   const getDailyNutrition = (date) => {

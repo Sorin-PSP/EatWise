@@ -1,80 +1,40 @@
-import React, { useState } from 'react';
-import { FaSearch, FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaFilter } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaSearch, FaPlus, FaEdit, FaTrash, FaCheck, FaTimes, FaFilter, FaListUl } from 'react-icons/fa';
 import Card from '../../components/Card';
 import { useUser } from '../../contexts/UserContext';
 import { Navigate } from 'react-router-dom';
+import { useFood } from '../../contexts/FoodContext';
+import AddFoodModal from '../../components/AddFoodModal';
+import BulkFoodAddModal from '../../components/BulkFoodAddModal';
 
 function AdminFoodDatabase() {
   const { user } = useUser();
+  const { foods, deleteFood } = useFood();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showBulkAddModal, setShowBulkAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentFood, setCurrentFood] = useState(null);
+  const [foodItems, setFoodItems] = useState([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
   // Redirect if not admin
   if (!user.isLoggedIn || !user.isAdmin) {
     return <Navigate to="/login" />;
   }
   
-  // Mock food data
-  const foodItems = [
-    { 
-      id: 1, 
-      name: 'Grilled Chicken Breast', 
-      calories: 165, 
-      protein: 31, 
-      carbs: 0, 
-      fat: 3.6, 
-      status: 'approved', 
-      addedBy: 'System', 
-      dateAdded: '2023-05-10' 
-    },
-    { 
-      id: 2, 
-      name: 'Quinoa', 
-      calories: 120, 
-      protein: 4.4, 
-      carbs: 21.3, 
-      fat: 1.9, 
-      status: 'approved', 
-      addedBy: 'System', 
-      dateAdded: '2023-05-12' 
-    },
-    { 
-      id: 3, 
-      name: 'Avocado', 
-      calories: 160, 
-      protein: 2, 
-      carbs: 8.5, 
-      fat: 14.7, 
-      status: 'approved', 
-      addedBy: 'Maria Popescu', 
-      dateAdded: '2023-06-01' 
-    },
-    { 
-      id: 4, 
-      name: 'Homemade Granola', 
-      calories: 120, 
-      protein: 3, 
-      carbs: 18, 
-      fat: 5, 
-      status: 'pending', 
-      addedBy: 'Ion Ionescu', 
-      dateAdded: '2023-06-15' 
-    },
-    { 
-      id: 5, 
-      name: 'Protein Smoothie', 
-      calories: 220, 
-      protein: 20, 
-      carbs: 25, 
-      fat: 3, 
-      status: 'pending', 
-      addedBy: 'Alexandru Munteanu', 
-      dateAdded: '2023-06-18' 
-    },
-  ];
+  // Convert foods from context to the format expected by the admin panel
+  useEffect(() => {
+    const formattedFoods = foods.map(food => ({
+      ...food, // Keep all original properties
+      status: 'approved', // Default status for existing foods
+      addedBy: 'System',
+      dateAdded: new Date().toISOString().split('T')[0] // Today's date as fallback
+    }));
+    
+    setFoodItems(formattedFoods);
+  }, [foods, refreshTrigger]);
   
   // Filter foods based on search term and status
   const filteredFoods = foodItems.filter(food => {
@@ -99,8 +59,25 @@ function AdminFoodDatabase() {
   };
   
   const handleDelete = (id) => {
-    // In a real app, this would update the database
-    console.log(`Deleting food with id: ${id}`);
+    if (window.confirm('Are you sure you want to delete this food item?')) {
+      deleteFood(id);
+      // Trigger refresh
+      setRefreshTrigger(prev => prev + 1);
+    }
+  };
+  
+  const handleModalClose = () => {
+    setShowAddModal(false);
+    setShowEditModal(false);
+    setCurrentFood(null);
+    // Trigger refresh when modal closes
+    setRefreshTrigger(prev => prev + 1);
+  };
+  
+  const handleBulkModalClose = () => {
+    setShowBulkAddModal(false);
+    // Trigger refresh when bulk modal closes
+    setRefreshTrigger(prev => prev + 1);
   };
   
   const getStatusBadge = (status) => {
@@ -120,13 +97,22 @@ function AdminFoodDatabase() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Food Database Management</h1>
-        <button 
-          onClick={() => setShowAddModal(true)}
-          className="bg-primary text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-primary-dark transition-colors"
-        >
-          <FaPlus />
-          <span>Add Food</span>
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => setShowBulkAddModal(true)}
+            className="bg-secondary text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-secondary-dark transition-colors"
+          >
+            <FaListUl />
+            <span>Bulk Add</span>
+          </button>
+          <button 
+            onClick={() => setShowAddModal(true)}
+            className="bg-primary text-white px-4 py-2 rounded-md flex items-center space-x-2 hover:bg-primary-dark transition-colors"
+          >
+            <FaPlus />
+            <span>Add Food</span>
+          </button>
+        </div>
       </div>
       
       {/* Search and Filter */}
@@ -277,8 +263,24 @@ function AdminFoodDatabase() {
         </div>
       </div>
       
-      {/* Add Food Modal would go here */}
-      {/* Edit Food Modal would go here */}
+      {/* Add Food Modal */}
+      <AddFoodModal 
+        isOpen={showAddModal} 
+        onClose={handleModalClose} 
+      />
+      
+      {/* Edit Food Modal */}
+      <AddFoodModal 
+        isOpen={showEditModal} 
+        onClose={handleModalClose} 
+        editFood={currentFood}
+      />
+      
+      {/* Bulk Add Food Modal */}
+      <BulkFoodAddModal
+        isOpen={showBulkAddModal}
+        onClose={handleBulkModalClose}
+      />
     </div>
   );
 }

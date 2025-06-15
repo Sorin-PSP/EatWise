@@ -1,87 +1,18 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaFilter, FaHeart, FaRegHeart, FaSearch } from 'react-icons/fa';
+import { FaFilter, FaHeart, FaRegHeart, FaSearch, FaPlus } from 'react-icons/fa';
 import FoodSearchBar from '../components/FoodSearchBar';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
 import { useUser } from '../contexts/UserContext';
+import { useFood } from '../contexts/FoodContext';
 
 function FoodDatabasePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
   const { user } = useUser();
-  
-  // Sample food data
-  const foods = [
-    { 
-      id: 1, 
-      name: 'Chicken Breast', 
-      calories: 165, 
-      protein: 31, 
-      carbs: 0, 
-      fat: 3.6, 
-      category: 'protein',
-      image: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-    { 
-      id: 2, 
-      name: 'Brown Rice', 
-      calories: 112, 
-      protein: 2.6, 
-      carbs: 23.5, 
-      fat: 0.9, 
-      category: 'carbs',
-      image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-    { 
-      id: 3, 
-      name: 'Avocado', 
-      calories: 160, 
-      protein: 2, 
-      carbs: 8.5, 
-      fat: 14.7, 
-      category: 'fats',
-      image: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-    { 
-      id: 4, 
-      name: 'Broccoli', 
-      calories: 34, 
-      protein: 2.8, 
-      carbs: 6.6, 
-      fat: 0.4, 
-      category: 'vegetables',
-      image: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-    { 
-      id: 5, 
-      name: 'Apples', 
-      calories: 52, 
-      protein: 0.3, 
-      carbs: 13.8, 
-      fat: 0.2, 
-      category: 'fruits',
-      image: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-    { 
-      id: 6, 
-      name: 'Greek Yogurt', 
-      calories: 59, 
-      protein: 10, 
-      carbs: 3.6, 
-      fat: 0.4, 
-      category: 'dairy',
-      image: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-    },
-  ];
-  
-  // Filter foods based on search query and category
-  const filteredFoods = foods.filter(food => {
-    const matchesSearch = food.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = activeCategory === 'all' || food.category === activeCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const { foods } = useFood();
   
   // Categories
   const categories = [
@@ -92,7 +23,32 @@ function FoodDatabasePage() {
     { id: 'vegetables', name: 'Vegetables' },
     { id: 'fruits', name: 'Fruits' },
     { id: 'dairy', name: 'Dairy' },
+    { id: 'other', name: 'Other' }
   ];
+  
+  // Default food images by category
+  const defaultImages = {
+    protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+  };
+  
+  // Prepare foods for display with images
+  const foodsWithImages = foods.map(food => ({
+    ...food,
+    image: defaultImages[food.category] || defaultImages.other
+  }));
+  
+  // Filter foods based on search query and category
+  const filteredFoods = foodsWithImages.filter(food => {
+    const matchesSearch = food.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = activeCategory === 'all' || food.category === activeCategory;
+    return matchesSearch && matchesCategory;
+  });
   
   const handleSearch = (query) => {
     setSearchQuery(query);
@@ -168,7 +124,7 @@ function FoodDatabasePage() {
                                 food.category === 'carbs' ? 'secondary' : 
                                 food.category === 'fats' ? 'warning' : 
                                 'accent'}>
-                    {categories.find(c => c.id === food.category)?.name}
+                    {categories.find(c => c.id === food.category)?.name || 'Other'}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
