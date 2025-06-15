@@ -18,7 +18,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { updateUser, checkAdminCredentials } = useUser();
+  const { updateUser, login } = useUser();
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,24 +62,21 @@ function LoginPage() {
     // Simulate API call
     setTimeout(() => {
       if (isLogin) {
-        // Check if this is the admin account
-        const isAdmin = checkAdminCredentials(formData.email, formData.password);
+        // Use the login function from context
+        const result = login(formData.email, formData.password);
         
-        // In a real app, you would verify credentials with your backend
-        // For demo purposes, we'll just simulate a successful login
-        const userData = {
-          name: isAdmin ? 'Administrator' : 'Demo User',
-          email: formData.email,
-          isLoggedIn: true,
-          isAdmin: isAdmin
-        };
-        
-        // Save to context and localStorage
-        updateUser(userData);
-        localStorage.setItem('eatwise-auth', JSON.stringify(userData));
-        
-        setLoading(false);
-        navigate('/dashboard');
+        if (result.success) {
+          setLoading(false);
+          // Redirect admin users to admin dashboard
+          if (formData.email === 'AdminEatWise@gmail.com') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/dashboard');
+          }
+        } else {
+          setError(result.error || 'Invalid credentials');
+          setLoading(false);
+        }
       } else {
         // In a real app, you would register the user with your backend
         // For demo purposes, we'll just simulate a successful registration
@@ -92,7 +89,6 @@ function LoginPage() {
         
         // Save to context and localStorage
         updateUser(userData);
-        localStorage.setItem('eatwise-auth', JSON.stringify(userData));
         
         setLoading(false);
         navigate('/profile');

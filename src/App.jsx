@@ -16,19 +16,11 @@ import { useEffect } from 'react'
 import { useUser } from './contexts/UserContext'
 
 function App() {
-  const { user, setUser } = useUser()
-
-  // Check for saved user data on app load
-  useEffect(() => {
-    const savedUser = localStorage.getItem('eatwise-user')
-    if (savedUser) {
-      setUser(prev => ({ ...prev, ...JSON.parse(savedUser) }))
-    }
-  }, [setUser])
+  const { user } = useUser()
 
   // Protected route component
   const ProtectedRoute = ({ children }) => {
-    if (!user.isLoggedIn) {
+    if (!user || !user.isLoggedIn) {
       return <Navigate to="/login" replace />
     }
     return children
@@ -36,7 +28,7 @@ function App() {
 
   // Admin route component
   const AdminRoute = ({ children }) => {
-    if (!user.isLoggedIn || !user.isAdmin) {
+    if (!user || !user.isLoggedIn || !user.isAdmin) {
       return <Navigate to="/login" replace />
     }
     return children

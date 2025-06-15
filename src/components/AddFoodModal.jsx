@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaTimes } from 'react-icons/fa';
 import { useFood } from '../contexts/FoodContext';
+import { useUser } from '../contexts/UserContext';
+import { convertFoodServing, convertQuantity } from '../utils/unitConversion';
 import Button from './Button';
 
 function AddFoodModal({ isOpen, onClose, editFood = null }) {
-  const { addFood, updateFood } = useFood();
+  // Ensure FoodContext is properly imported and used
+  const foodContext = useFood();
+  const { addFood, updateFood, refreshFoods } = foodContext || {};
+  const { measurementSystem } = useUser();
+  
   const [formData, setFormData] = useState({
     name: '',
     calories: '',
@@ -17,36 +23,121 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
     category: 'other'
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [displayUnits, setDisplayUnits] = useState({
+    serving: 'g'
+  });
   
   // If editing, populate form with food data
-  React.useEffect(() => {
+  useEffect(() => {
     if (editFood) {
-      setFormData({
-        name: editFood.name || '',
-        calories: editFood.calories || '',
-        protein: editFood.protein || '',
-        carbs: editFood.carbs || '',
-        fat: editFood.fat || '',
-        fiber: editFood.fiber || '',
-        serving: editFood.serving || '100',
-        unit: editFood.unit || 'g',
-        category: editFood.category || 'other'
-      });
+      // Always store in metric, but display in user's preferred system
+      const metricFood = editFood;
+      
+      if (measurementSystem === 'imperial') {
+        // Convert serving size for display
+        const convertedServing = convertFoodServing(
+          metricFood.serving,
+          metricFood.unit,
+          'metric',
+          'imperial'
+        );
+        
+        setFormData({
+          name: metricFood.name || '',
+          calories: metricFood.calories || '',
+          protein: metricFood.protein || '',
+          carbs: metricFood.carbs || '',
+          fat: metricFood.fat || '',
+          fiber: metricFood.fiber || '',
+          serving: convertedServing.amount.toString(),
+          unit: convertedServing.unit,
+          category: metricFood.category || 'other'
+        });
+        
+        setDisplayUnits({
+          serving: convertedServing.unit
+        });
+      } else {
+        // Use metric values directly
+        setFormData({
+          name: metricFood.name || '',
+          calories: metricFood.calories || '',
+          protein: metricFood.protein || '',
+          carbs: metricFood.carbs || '',
+          fat: metricFood.fat || '',
+          fiber: metricFood.fiber || '',
+          serving: metricFood.serving.toString() || '100',
+          unit: metricFood.unit || 'g',
+          category: metricFood.category || 'other'
+        });
+        
+        setDisplayUnits({
+          serving: metricFood.unit
+        });
+      }
     } else {
       // Reset form when not editing
-      setFormData({
-        name: '',
-        calories: '',
-        protein: '',
-        carbs: '',
-        fat: '',
-        fiber: '',
-        serving: '100',
-        unit: 'g',
-        category: 'other'
+      if (measurementSystem === 'imperial') {
+        // Default to oz for imperial
+        setFormData({
+          name: '',
+          calories: '',
+          protein: '',
+          carbs: '',
+          fat: '',
+          fiber: '',
+          serving: '3.5',  // ~100g in oz
+          unit: 'oz',
+          category: 'other'
+        });
+        
+        setDisplayUnits({
+          serving: 'oz'
+        });
+      } else {
+        // Default to metric
+        setFormData({
+          name: '',
+          calories: '',
+          protein: '',
+          carbs: '',
+          fat: '',
+          fiber: '',
+          serving: '100',
+          unit: 'g',
+          category: 'other'
+        });
+        
+        setDisplayUnits({
+          serving: 'g'
+        });
+      }
+    }
+    
+    // Reset errors and submission state when modal opens/closes
+    setErrors({});
+    setIsSubmitting(false);
+    setSuccessMessage('');
+  }, [editFood, isOpen, measurementSystem]);
+  
+  // Update display units when measurement system changes
+  useEffect(() => {
+    if (measurementSystem === 'imperial') {
+      setDisplayUnits({
+        serving: formData.unit === 'g' ? 'oz' : 
+                 formData.unit === 'ml' ? 'fl oz' : 
+                 formData.unit
+      });
+    } else {
+      setDisplayUnits({
+        serving: formData.unit === 'oz' ? 'g' : 
+                 formData.unit === 'fl oz' ? 'ml' : 
+                 formData.unit
       });
     }
-  }, [editFood, isOpen]);
+  }, [measurementSystem, formData.unit]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -98,28 +189,81 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    if (isSubmitting) return;
+    
     if (!validateForm()) {
       return;
     }
     
-    // Convert string values to numbers
-    const foodData = {
-      ...formData,
-      calories: Number(formData.calories),
-      protein: Number(formData.protein),
-      carbs: Number(formData.carbs),
-      fat: Number(formData.fat),
-      fiber: Number(formData.fiber || 0),
-      serving: Number(formData.serving)
-    };
-    
-    if (editFood) {
-      updateFood(editFood.id, foodData);
-    } else {
-      addFood(foodData);
+    // Check if food context functions are available
+    if (!addFood || !updateFood) {
+      setErrors({
+        general: "Food context not available. Please try again later."
+      });
+      return;
     }
     
-    onClose();
+    setIsSubmitting(true);
+    setSuccessMessage('');
+    
+    // Convert values to metric for storage if needed
+    let metricFoodData = { ...formData };
+    
+    if (measurementSystem === 'imperial') {
+      // Convert serving size to metric
+      const metricServing = convertQuantity(
+        Number(formData.serving),
+        formData.unit,
+        formData.unit === 'oz' || formData.unit === 'lb' ? 'g' : 'ml'
+      );
+      
+      metricFoodData = {
+        ...formData,
+        serving: metricServing,
+        unit: formData.unit === 'oz' || formData.unit === 'lb' ? 'g' : 'ml'
+      };
+    }
+    
+    // Convert string values to numbers
+    const foodData = {
+      ...metricFoodData,
+      calories: Number(metricFoodData.calories),
+      protein: Number(metricFoodData.protein),
+      carbs: Number(metricFoodData.carbs),
+      fat: Number(metricFoodData.fat),
+      fiber: Number(metricFoodData.fiber || 0),
+      serving: Number(metricFoodData.serving)
+    };
+    
+    try {
+      if (editFood) {
+        updateFood(editFood.id, foodData);
+        console.log('Food updated successfully:', editFood.id);
+        setSuccessMessage('Food updated successfully!');
+      } else {
+        const newFood = addFood(foodData);
+        console.log('Food added successfully:', newFood.id);
+        setSuccessMessage('Food added successfully!');
+      }
+      
+      // Force a refresh of the food context
+      if (refreshFoods) {
+        refreshFoods();
+      }
+      
+      // Close the modal after a short delay to show success message
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving food:', error);
+      setIsSubmitting(false);
+      setSuccessMessage('');
+      setErrors(prev => ({
+        ...prev,
+        general: `Error saving food: ${error.message || 'Unknown error'}`
+      }));
+    }
   };
   
   if (!isOpen) return null;
@@ -136,6 +280,18 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
             <FaTimes />
           </button>
         </div>
+        
+        {successMessage && (
+          <div className="bg-success/10 text-success p-3 m-4 rounded-md">
+            {successMessage}
+          </div>
+        )}
+        
+        {errors.general && (
+          <div className="bg-error/10 text-error p-3 m-4 rounded-md">
+            {errors.general}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="p-4">
           <div className="space-y-4">
@@ -190,6 +346,7 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
                   value={formData.serving}
                   onChange={handleChange}
                   min="1"
+                  step="0.1"
                   className={`w-full p-2 border rounded-md ${errors.serving ? 'border-error' : 'border-gray-300'}`}
                 />
                 {errors.serving && <p className="text-error text-xs mt-1">{errors.serving}</p>}
@@ -206,10 +363,19 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
                   onChange={handleChange}
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
-                  <option value="g">g</option>
-                  <option value="ml">ml</option>
-                  <option value="oz">oz</option>
-                  <option value="cup">cup</option>
+                  {measurementSystem === 'metric' ? (
+                    <>
+                      <option value="g">g</option>
+                      <option value="ml">ml</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="oz">oz</option>
+                      <option value="lb">lb</option>
+                      <option value="fl oz">fl oz</option>
+                      <option value="cup">cup</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
@@ -310,14 +476,16 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
                 variant="outline" 
                 onClick={onClose}
                 type="button"
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button 
                 type="submit"
                 variant="primary"
+                disabled={isSubmitting}
               >
-                {editFood ? 'Update Food' : 'Add Food'}
+                {isSubmitting ? 'Saving...' : (editFood ? 'Update Food' : 'Add Food')}
               </Button>
             </div>
           </div>

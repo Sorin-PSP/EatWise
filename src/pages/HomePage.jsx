@@ -5,6 +5,11 @@ import { useUser } from '../contexts/UserContext'
 function HomePage() {
   const { user } = useUser()
   
+  // Check if user exists before accessing its properties
+  const isLoggedIn = user && user.isLoggedIn
+  const userName = user?.name
+  const userCalorieGoal = user?.dailyCalorieGoal
+  
   return (
     <div>
       <div className="bg-gradient-to-r from-primary to-primary-dark rounded-xl text-white p-6 mb-6 relative overflow-hidden">
@@ -18,8 +23,8 @@ function HomePage() {
         <h1 className="text-2xl font-bold mb-2 relative z-10">Welcome to EatWise!</h1>
         <p className="mb-4 relative z-10">Your personal calorie tracking and monitoring application.</p>
         
-        {user.isLoggedIn ? (
-          <p className="relative z-10">Hello, <strong>{user.name}</strong>! Your daily goal is <strong>{user.dailyCalorieGoal} calories</strong>.</p>
+        {isLoggedIn ? (
+          <p className="relative z-10">Hello, <strong>{userName}</strong>! Your daily goal is <strong>{userCalorieGoal} calories</strong>.</p>
         ) : (
           <Link to="/login" className="btn bg-white text-primary hover:bg-gray-100 inline-block relative z-10">
             Login to get started
@@ -28,7 +33,7 @@ function HomePage() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {user.isLoggedIn ? (
+        {isLoggedIn ? (
           <>
             <Link to="/dashboard" className="card hover:shadow-lg transition-shadow flex items-center p-6 relative overflow-hidden group">
               <div className="absolute inset-0 bg-cover bg-center opacity-10 group-hover:opacity-15 transition-opacity duration-300" 

@@ -4,10 +4,12 @@ import { useFood } from '../contexts/FoodContext';
 import Button from './Button';
 
 function BulkFoodAddModal({ isOpen, onClose }) {
-  const { addFood } = useFood();
+  const foodContext = useFood();
+  const { addFood, refreshFoods } = foodContext || {};
   const [bulkText, setBulkText] = useState('');
   const [parseResults, setParseResults] = useState({ success: [], errors: [] });
   const [showResults, setShowResults] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleTextChange = (e) => {
     setBulkText(e.target.value);
@@ -22,20 +24,20 @@ function BulkFoodAddModal({ isOpen, onClose }) {
       return { success: false, error: 'Empty line' };
     }
     
-    // Regex to match the pattern: "Food name kcal / g prot / g carb / g fat"
+    // Updated regex to match the pattern: "Food name kcal / g prot / g carb / g fat / g fiber"
     // More flexible regex that can handle variations in spacing and formatting
-    const regex = /^(.+?)\s+(\d+(?:\.\d+)?)\s*kcal\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*prot\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*carb\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*fat$/i;
+    const regex = /^(.+?)\s+(\d+(?:\.\d+)?)\s*kcal\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*prot\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*carb\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*fat(?:\s*\/\s*(\d+(?:\.\d+)?)\s*g\s*fiber)?$/i;
     
     const match = trimmedLine.match(regex);
     
     if (!match) {
       return { 
         success: false, 
-        error: `Could not parse line: "${trimmedLine}". Format should be "Food name kcal / g prot / g carb / g fat"` 
+        error: `Could not parse line: "${trimmedLine}". Format should be "Food name kcal / g prot / g carb / g fat / g fiber"` 
       };
     }
     
-    const [, name, calories, protein, carbs, fat] = match;
+    const [, name, calories, protein, carbs, fat, fiber = "0"] = match;
     
     return {
       success: true,
@@ -45,7 +47,7 @@ function BulkFoodAddModal({ isOpen, onClose }) {
         protein: parseFloat(protein),
         carbs: parseFloat(carbs),
         fat: parseFloat(fat),
-        fiber: 0,
+        fiber: parseFloat(fiber),
         serving: 100,
         unit: 'g',
         category: determineCategory(parseFloat(protein), parseFloat(carbs), parseFloat(fat))
@@ -61,8 +63,17 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     return 'other';
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (isSubmitting || !addFood) {
+      setErrors({
+        general: "Food context not available. Please try again later."
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     
     // Split by newlines and filter out empty lines
     const lines = bulkText
@@ -74,18 +85,24 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     
     const results = { success: [], errors: [] };
     
-    // Process each line
+    // Process each line one by one with proper async handling
     for (const line of lines) {
       const result = parseFood(line);
       console.log("Parsing result for line:", line, result);
       
       if (result.success) {
         try {
-          const newFood = addFood(result.food);
+          // Add the food to the database
+          const newFood = await Promise.resolve(addFood(result.food));
           results.success.push({
             name: result.food.name,
             id: newFood.id
           });
+          
+          // Important: Wait a small amount of time between additions to ensure unique IDs
+          // and prevent race conditions in localStorage updates
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
         } catch (error) {
           console.error("Error adding food:", error);
           results.errors.push({
@@ -103,12 +120,23 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     
     console.log("Final results:", results);
     
+    // Force a refresh of the food context to ensure all clients see the new foods
+    if (refreshFoods) {
+      refreshFoods();
+    }
+    
     setParseResults(results);
     setShowResults(true);
+    setIsSubmitting(false);
     
     // If all foods were added successfully, clear the text area
     if (results.errors.length === 0 && results.success.length > 0) {
       setBulkText('');
+      
+      // Close the modal after a short delay to show success message
+      setTimeout(() => {
+        handleClose();
+      }, 1500);
     }
   };
 
@@ -116,6 +144,13 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     setBulkText('');
     setParseResults({ success: [], errors: [] });
     setShowResults(false);
+    setIsSubmitting(false);
+    
+    // Force a final refresh before closing to ensure all clients see the new foods
+    if (refreshFoods) {
+      refreshFoods();
+    }
+    
     onClose();
   };
 
@@ -141,10 +176,13 @@ function BulkFoodAddModal({ isOpen, onClose }) {
                 Enter foods (one per line)
               </label>
               <div className="text-xs text-gray-500 mb-2">
-                Format: "Food name kcal / g prot / g carb / g fat"
+                Format: "Food name kcal / g prot / g carb / g fat / g fiber"
               </div>
               <div className="text-xs text-gray-500 mb-2">
-                Example: Apple 52kcal / 0.3g prot / 14g carb / 0.2g fat
+                Example: Apple 52kcal / 0.3g prot / 14g carb / 0.2g fat / 2.4g fiber
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                Note: Fiber is optional. If not provided, it will default to 0g.
               </div>
               <textarea
                 id="bulkText"
@@ -152,9 +190,10 @@ function BulkFoodAddModal({ isOpen, onClose }) {
                 className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 value={bulkText}
                 onChange={handleTextChange}
-                placeholder="Apple 52kcal / 0.3g prot / 14g carb / 0.2g fat
-Avocado 160kcal / 2g prot / 9g carb / 15g fat
-Almonds 579kcal / 21g prot / 22g carb / 50g fat"
+                placeholder="Apple 52kcal / 0.3g prot / 14g carb / 0.2g fat / 2.4g fiber
+Avocado 160kcal / 2g prot / 9g carb / 15g fat / 6.7g fiber
+Almonds 579kcal / 21g prot / 22g carb / 50g fat / 12.5g fiber"
+                disabled={isSubmitting}
               />
             </div>
             
@@ -194,14 +233,17 @@ Almonds 579kcal / 21g prot / 22g carb / 50g fat"
               <Button 
                 variant="outline" 
                 onClick={handleClose}
+                type="button"
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button 
                 type="submit"
                 variant="primary"
+                disabled={isSubmitting}
               >
-                Add Foods
+                {isSubmitting ? 'Adding Foods...' : 'Add Foods'}
               </Button>
             </div>
           </form>

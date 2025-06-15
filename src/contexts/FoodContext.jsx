@@ -70,65 +70,110 @@ export function FoodProvider({ children }) {
   const [foods, setFoods] = useState([])
   const [dailyLog, setDailyLog] = useState({})
   const [currentDate, setCurrentDate] = useState(new Date().toISOString().split('T')[0])
+  const [isInitialized, setIsInitialized] = useState(false)
 
   // Load foods from localStorage on mount
   useEffect(() => {
-    const savedFoods = localStorage.getItem('eatwise-foods')
-    if (savedFoods) {
-      try {
-        const parsedFoods = JSON.parse(savedFoods)
-        setFoods(parsedFoods)
-        console.log('Loaded foods from localStorage:', parsedFoods.length)
-      } catch (error) {
-        console.error('Error parsing saved foods:', error)
+    const loadFoodsFromStorage = () => {
+      const savedFoods = localStorage.getItem('eatwise-foods')
+      if (savedFoods) {
+        try {
+          const parsedFoods = JSON.parse(savedFoods)
+          setFoods(parsedFoods)
+          console.log('Loaded foods from localStorage:', parsedFoods.length)
+        } catch (error) {
+          console.error('Error parsing saved foods:', error)
+          setFoods(initialFoods)
+          localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
+        }
+      } else {
+        console.log('No saved foods found, using initial foods')
         setFoods(initialFoods)
         localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
       }
-    } else {
-      console.log('No saved foods found, using initial foods')
-      setFoods(initialFoods)
-      localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
+      
+      const savedDailyLog = localStorage.getItem('eatwise-dailyLog')
+      if (savedDailyLog) {
+        try {
+          setDailyLog(JSON.parse(savedDailyLog))
+        } catch (error) {
+          console.error('Error parsing saved daily log:', error)
+          setDailyLog({})
+        }
+      }
+      
+      setIsInitialized(true)
     }
     
-    const savedDailyLog = localStorage.getItem('eatwise-dailyLog')
-    if (savedDailyLog) {
-      try {
-        setDailyLog(JSON.parse(savedDailyLog))
-      } catch (error) {
-        console.error('Error parsing saved daily log:', error)
-        setDailyLog({})
+    loadFoodsFromStorage()
+    
+    // Set up a storage event listener to sync data across tabs
+    const handleStorageChange = (e) => {
+      if (e.key === 'eatwise-foods') {
+        try {
+          const updatedFoods = JSON.parse(e.newValue)
+          setFoods(updatedFoods)
+          console.log('Updated foods from storage event:', updatedFoods.length)
+        } catch (error) {
+          console.error('Error parsing foods from storage event:', error)
+        }
       }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Set up an interval to periodically check for new foods
+    const intervalId = setInterval(() => {
+      refreshFoods()
+    }, 5000) // Check every 5 seconds
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(intervalId)
     }
   }, [])
 
-  // Save to localStorage whenever foods or dailyLog changes
+  // Save to localStorage whenever foods changes
   useEffect(() => {
-    if (foods.length > 0) {
+    if (isInitialized && foods.length > 0) {
       console.log('Saving foods to localStorage:', foods.length)
       localStorage.setItem('eatwise-foods', JSON.stringify(foods))
+      
+      // Dispatch a custom event to notify other components that foods have been updated
+      window.dispatchEvent(new CustomEvent('foodsUpdated', { detail: { foods } }))
     }
-  }, [foods])
+  }, [foods, isInitialized])
   
+  // Save to localStorage whenever dailyLog changes
   useEffect(() => {
-    if (Object.keys(dailyLog).length > 0) {
+    if (isInitialized && Object.keys(dailyLog).length > 0) {
       localStorage.setItem('eatwise-dailyLog', JSON.stringify(dailyLog))
     }
-  }, [dailyLog])
+  }, [dailyLog, isInitialized])
 
   const addFood = (newFood) => {
+    // Generate a unique ID based on timestamp and a random number
+    // This helps prevent collisions when adding multiple foods in quick succession
+    const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    
     const foodWithId = {
       ...newFood,
-      id: Date.now().toString()
+      id: uniqueId
     }
     
     console.log('Adding new food:', foodWithId)
     
-    // Update state with the new food
+    // Create a new array with the new food to avoid state mutation issues
     const updatedFoods = [...foods, foodWithId]
+    
+    // Update state with the new food
     setFoods(updatedFoods)
     
     // Immediately save to localStorage for redundancy
     localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
+    
+    // Dispatch a custom event to notify other components that a food has been added
+    window.dispatchEvent(new CustomEvent('foodAdded', { detail: { food: foodWithId } }))
     
     return foodWithId
   }
@@ -139,6 +184,9 @@ export function FoodProvider({ children }) {
     
     // Immediately save to localStorage
     localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
+    
+    // Dispatch a custom event to notify other components that a food has been updated
+    window.dispatchEvent(new CustomEvent('foodUpdated', { detail: { id, updatedFood } }))
   }
 
   const deleteFood = (id) => {
@@ -147,6 +195,9 @@ export function FoodProvider({ children }) {
     
     // Immediately save to localStorage
     localStorage.setItem('eatwise-foods', JSON.stringify(filteredFoods))
+    
+    // Dispatch a custom event to notify other components that a food has been deleted
+    window.dispatchEvent(new CustomEvent('foodDeleted', { detail: { id } }))
   }
 
   const getFood = (id) => {
@@ -171,6 +222,7 @@ export function FoodProvider({ children }) {
             protein: Math.round((food.protein * quantity) / food.serving * 10) / 10,
             carbs: Math.round((food.carbs * quantity) / food.serving * 10) / 10,
             fat: Math.round((food.fat * quantity) / food.serving * 10) / 10,
+            fiber: Math.round((food.fiber * quantity) / food.serving * 10) / 10,
           }
         ]
       }
@@ -203,7 +255,7 @@ export function FoodProvider({ children }) {
 
   const getDailyNutrition = (date) => {
     if (!dailyLog[date]) {
-      return { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      return { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
     }
     
     const meals = ['breakfast', 'lunch', 'dinner', 'snacks']
@@ -216,10 +268,39 @@ export function FoodProvider({ children }) {
         totals.protein += item.protein
         totals.carbs += item.carbs
         totals.fat += item.fat
+        totals.fiber += (item.fiber || 0)
       })
       
       return totals
-    }, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+    }, { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 })
+  }
+
+  // Function to force refresh foods from localStorage
+  const refreshFoods = () => {
+    const savedFoods = localStorage.getItem('eatwise-foods')
+    if (savedFoods) {
+      try {
+        const parsedFoods = JSON.parse(savedFoods)
+        
+        // Only update if the foods have changed (different length or new items)
+        if (parsedFoods.length !== foods.length) {
+          console.log('Food count changed, refreshing foods from localStorage')
+          setFoods(parsedFoods)
+          return
+        }
+        
+        // Check if there are any new foods by comparing IDs
+        const currentIds = new Set(foods.map(food => food.id))
+        const hasNewFoods = parsedFoods.some(food => !currentIds.has(food.id))
+        
+        if (hasNewFoods) {
+          console.log('New foods detected, refreshing foods from localStorage')
+          setFoods(parsedFoods)
+        }
+      } catch (error) {
+        console.error('Error parsing saved foods during refresh:', error)
+      }
+    }
   }
 
   return (
@@ -229,6 +310,7 @@ export function FoodProvider({ children }) {
       updateFood,
       deleteFood,
       getFood,
+      refreshFoods,
       dailyLog,
       currentDate,
       setCurrentDate,
