@@ -2,7 +2,21 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const FoodContext = createContext()
 
-// Sample food database
+// Platform leaf logo (fallback image)
+const platformLogo = 'https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750';
+
+// Default food images by category
+const defaultImages = {
+  protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+};
+
+// Sample food database with images
 const initialFoods = [
   {
     id: '1',
@@ -14,7 +28,8 @@ const initialFoods = [
     fiber: 0,
     serving: 100,
     unit: 'g',
-    category: 'protein'
+    category: 'protein',
+    image: 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
   },
   {
     id: '2',
@@ -26,7 +41,8 @@ const initialFoods = [
     fiber: 0.4,
     serving: 100,
     unit: 'g',
-    category: 'carbs'
+    category: 'carbs',
+    image: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
   },
   {
     id: '3',
@@ -38,7 +54,8 @@ const initialFoods = [
     fiber: 2.6,
     serving: 100,
     unit: 'g',
-    category: 'vegetables'
+    category: 'vegetables',
+    image: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
   },
   {
     id: '4',
@@ -50,7 +67,8 @@ const initialFoods = [
     fiber: 0,
     serving: 100,
     unit: 'ml',
-    category: 'fats'
+    category: 'fats',
+    image: 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750'
   },
   {
     id: '5',
@@ -62,9 +80,51 @@ const initialFoods = [
     fiber: 2.4,
     serving: 100,
     unit: 'g',
-    category: 'fruits'
+    category: 'fruits',
+    image: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
   }
 ]
+
+// Specific food images mapping
+const specificFoodImages = {
+  'chicken breast': 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'white rice': 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'broccoli': 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'olive oil': 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'apples': 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'avocado': 'https://images.pexels.com/photos/2228553/pexels-photo-2228553.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'almonds': 'https://images.pexels.com/photos/1013420/pexels-photo-1013420.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'eggs': 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'salmon': 'https://images.pexels.com/photos/3296279/pexels-photo-3296279.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'beef': 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+  'pork': 'https://images.pexels.com/photos/8308126/pexels-photo-8308126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+};
+
+// Function to get the best image for a food
+const getFoodImage = (food) => {
+  // First try to find a specific image for this food by name
+  const foodNameLower = food.name.toLowerCase();
+  
+  // Check if we have an exact match
+  if (specificFoodImages[foodNameLower]) {
+    return specificFoodImages[foodNameLower];
+  }
+  
+  // Check if we have a partial match (food name contains one of our keys)
+  for (const [key, imageUrl] of Object.entries(specificFoodImages)) {
+    if (foodNameLower.includes(key)) {
+      return imageUrl;
+    }
+  }
+  
+  // If no specific image, use category image
+  if (defaultImages[food.category]) {
+    return defaultImages[food.category];
+  }
+  
+  // If all else fails, use platform logo
+  return platformLogo;
+};
 
 export function FoodProvider({ children }) {
   const [foods, setFoods] = useState([])
@@ -79,17 +139,53 @@ export function FoodProvider({ children }) {
       if (savedFoods) {
         try {
           const parsedFoods = JSON.parse(savedFoods)
-          setFoods(parsedFoods)
-          console.log('Loaded foods from localStorage:', parsedFoods.length)
+          
+          // Ensure all foods have images
+          const foodsWithImages = parsedFoods.map(food => {
+            if (!food.image) {
+              return {
+                ...food,
+                image: getFoodImage(food)
+              };
+            }
+            return food;
+          });
+          
+          setFoods(foodsWithImages)
+          console.log('Loaded foods from localStorage:', foodsWithImages.length)
         } catch (error) {
           console.error('Error parsing saved foods:', error)
-          setFoods(initialFoods)
-          localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
+          
+          // Add images to initial foods
+          const initialFoodsWithImages = initialFoods.map(food => {
+            if (!food.image) {
+              return {
+                ...food,
+                image: getFoodImage(food)
+              };
+            }
+            return food;
+          });
+          
+          setFoods(initialFoodsWithImages)
+          localStorage.setItem('eatwise-foods', JSON.stringify(initialFoodsWithImages))
         }
       } else {
         console.log('No saved foods found, using initial foods')
-        setFoods(initialFoods)
-        localStorage.setItem('eatwise-foods', JSON.stringify(initialFoods))
+        
+        // Add images to initial foods
+        const initialFoodsWithImages = initialFoods.map(food => {
+          if (!food.image) {
+            return {
+              ...food,
+              image: getFoodImage(food)
+            };
+          }
+          return food;
+        });
+        
+        setFoods(initialFoodsWithImages)
+        localStorage.setItem('eatwise-foods', JSON.stringify(initialFoodsWithImages))
       }
       
       const savedDailyLog = localStorage.getItem('eatwise-dailyLog')
@@ -154,39 +250,54 @@ export function FoodProvider({ children }) {
   const addFood = (newFood) => {
     // Generate a unique ID based on timestamp and a random number
     // This helps prevent collisions when adding multiple foods in quick succession
-    const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+    
+    // Add an image to the food based on its name or category
+    const foodWithImage = {
+      ...newFood,
+      image: newFood.image || getFoodImage(newFood)
+    };
     
     const foodWithId = {
-      ...newFood,
+      ...foodWithImage,
       id: uniqueId
     }
     
-    console.log('Adding new food:', foodWithId)
+    console.log('Adding new food:', foodWithId.name);
     
     // Create a new array with the new food to avoid state mutation issues
-    const updatedFoods = [...foods, foodWithId]
+    const updatedFoods = [...foods, foodWithId];
     
     // Update state with the new food
-    setFoods(updatedFoods)
+    setFoods(updatedFoods);
     
     // Immediately save to localStorage for redundancy
-    localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
+    localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods));
     
     // Dispatch a custom event to notify other components that a food has been added
-    window.dispatchEvent(new CustomEvent('foodAdded', { detail: { food: foodWithId } }))
+    window.dispatchEvent(new CustomEvent('foodAdded', { detail: { food: foodWithId } }));
     
-    return foodWithId
+    return foodWithId;
   }
 
   const updateFood = (id, updatedFood) => {
-    const updatedFoods = foods.map(food => food.id === id ? { ...food, ...updatedFood } : food)
+    // Ensure the food has an image
+    const foodWithImage = {
+      ...updatedFood,
+      image: updatedFood.image || getFoodImage(updatedFood)
+    };
+    
+    const updatedFoods = foods.map(food => 
+      food.id === id ? { ...food, ...foodWithImage } : food
+    )
+    
     setFoods(updatedFoods)
     
     // Immediately save to localStorage
     localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods))
     
     // Dispatch a custom event to notify other components that a food has been updated
-    window.dispatchEvent(new CustomEvent('foodUpdated', { detail: { id, updatedFood } }))
+    window.dispatchEvent(new CustomEvent('foodUpdated', { detail: { id, updatedFood: foodWithImage } }))
   }
 
   const deleteFood = (id) => {
@@ -223,6 +334,7 @@ export function FoodProvider({ children }) {
             carbs: Math.round((food.carbs * quantity) / food.serving * 10) / 10,
             fat: Math.round((food.fat * quantity) / food.serving * 10) / 10,
             fiber: Math.round((food.fiber * quantity) / food.serving * 10) / 10,
+            image: food.image // Include the food image in the log
           }
         ]
       }

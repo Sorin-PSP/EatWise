@@ -9,6 +9,20 @@ function FoodCard({ food, onEdit, onDelete }) {
   const [isAddToMealModalOpen, setIsAddToMealModalOpen] = useState(false);
   const [displayFood, setDisplayFood] = useState(food);
   
+  // Platform leaf logo (fallback image)
+  const platformLogo = 'https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750';
+  
+  // Default food images by category
+  const defaultImages = {
+    protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+  };
+  
   // Convert food serving to the current measurement system
   useEffect(() => {
     if (food) {
@@ -37,11 +51,39 @@ function FoodCard({ food, onEdit, onDelete }) {
     setIsAddToMealModalOpen(false);
   };
   
+  // Get appropriate image for the food
+  const getFoodImage = () => {
+    if (food.image) {
+      return food.image;
+    }
+    
+    // If no image, use category image
+    if (food.category && defaultImages[food.category]) {
+      return defaultImages[food.category];
+    }
+    
+    // If all else fails, use platform logo
+    return platformLogo;
+  };
+  
   if (!displayFood) return null;
   
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-100 hover:shadow-lg transition-shadow">
+        {/* Add food image */}
+        <div className="h-40 w-full overflow-hidden">
+          <img 
+            src={getFoodImage()} 
+            alt={displayFood.name} 
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // If image fails to load, use platform logo as fallback
+              e.target.src = platformLogo;
+            }}
+          />
+        </div>
+        
         <div className="p-4">
           <div className="flex justify-between items-start">
             <h3 className="font-medium text-gray-900 mb-1">{displayFood.name}</h3>

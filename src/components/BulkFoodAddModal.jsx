@@ -5,11 +5,12 @@ import Button from './Button';
 
 function BulkFoodAddModal({ isOpen, onClose }) {
   const foodContext = useFood();
-  const { addFood, refreshFoods } = foodContext || {};
+  const { addFood, refreshFoods, foods } = foodContext || {};
   const [bulkText, setBulkText] = useState('');
-  const [parseResults, setParseResults] = useState({ success: [], errors: [] });
+  const [parseResults, setParseResults] = useState({ success: [], errors: [], duplicates: [] });
   const [showResults, setShowResults] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleTextChange = (e) => {
     setBulkText(e.target.value);
@@ -50,7 +51,8 @@ function BulkFoodAddModal({ isOpen, onClose }) {
         fiber: parseFloat(fiber),
         serving: 100,
         unit: 'g',
-        category: determineCategory(parseFloat(protein), parseFloat(carbs), parseFloat(fat))
+        category: determineCategory(parseFloat(protein), parseFloat(carbs), parseFloat(fat)),
+        approved: true // Auto-approve all foods added through bulk process
       }
     };
   };
@@ -63,10 +65,25 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     return 'other';
   };
 
+  // Check if a food with the same name already exists
+  const isDuplicate = (foodName) => {
+    if (!foods || !Array.isArray(foods)) return false;
+    
+    // Normalize the food name for comparison (lowercase, trim)
+    const normalizedName = foodName.toLowerCase().trim();
+    
+    // Check if any existing food has the same name (case-insensitive)
+    return foods.some(food => food.name.toLowerCase().trim() === normalizedName);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (isSubmitting || !addFood) {
+    if (isSubmitting) {
+      return;
+    }
+    
+    if (!addFood || !foods) {
       setErrors({
         general: "Food context not available. Please try again later."
       });
@@ -74,6 +91,7 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     }
     
     setIsSubmitting(true);
+    setErrors({});
     
     // Split by newlines and filter out empty lines
     const lines = bulkText
@@ -81,33 +99,54 @@ function BulkFoodAddModal({ isOpen, onClose }) {
       .map(line => line.trim())
       .filter(line => line !== '');
     
-    console.log("Processing lines:", lines);
+    console.log("Processing lines:", lines.length, "lines");
     
-    const results = { success: [], errors: [] };
+    const results = { success: [], errors: [], duplicates: [] };
     
-    // Process each line one by one with proper async handling
-    for (const line of lines) {
+    // Create a local copy of the foods array to check for duplicates
+    // This helps prevent race conditions when checking for duplicates
+    let localFoodsList = [...foods];
+    
+    // Process each line one by one
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      console.log(`Processing line ${i+1}/${lines.length}: ${line}`);
+      
       const result = parseFood(line);
-      console.log("Parsing result for line:", line, result);
       
       if (result.success) {
-        try {
-          // Add the food to the database
-          const newFood = await Promise.resolve(addFood(result.food));
-          results.success.push({
+        // Check if this food already exists in the database
+        if (isDuplicate(result.food.name)) {
+          console.log(`Skipping duplicate food: ${result.food.name}`);
+          results.duplicates.push({
             name: result.food.name,
+            line
+          });
+          continue; // Skip to the next food
+        }
+        
+        try {
+          // Create a copy of the food object to avoid reference issues
+          const foodToAdd = { ...result.food };
+          
+          // Add the food to the database (already approved)
+          const newFood = addFood(foodToAdd);
+          
+          console.log(`Successfully added and approved food: ${foodToAdd.name} with ID: ${newFood.id}`);
+          
+          // Add to local foods list to check for duplicates in subsequent iterations
+          localFoodsList.push(newFood);
+          
+          results.success.push({
+            name: foodToAdd.name,
             id: newFood.id
           });
-          
-          // Important: Wait a small amount of time between additions to ensure unique IDs
-          // and prevent race conditions in localStorage updates
-          await new Promise(resolve => setTimeout(resolve, 100));
           
         } catch (error) {
           console.error("Error adding food:", error);
           results.errors.push({
             line,
-            error: `Error adding food: ${error.message || 'Unknown error'}`
+            error: `Error adding food: ${error?.message || 'Unknown error'}`
           });
         }
       } else if (result.error !== 'Empty line') {
@@ -120,7 +159,7 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     
     console.log("Final results:", results);
     
-    // Force a refresh of the food context to ensure all clients see the new foods
+    // Final refresh to ensure all foods are visible
     if (refreshFoods) {
       refreshFoods();
     }
@@ -129,22 +168,23 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     setShowResults(true);
     setIsSubmitting(false);
     
-    // If all foods were added successfully, clear the text area
-    if (results.errors.length === 0 && results.success.length > 0) {
+    // If all foods were added successfully (or were duplicates), clear the text area
+    if (results.errors.length === 0 && (results.success.length > 0 || results.duplicates.length > 0)) {
       setBulkText('');
       
       // Close the modal after a short delay to show success message
       setTimeout(() => {
         handleClose();
-      }, 1500);
+      }, 2000);
     }
   };
 
   const handleClose = () => {
     setBulkText('');
-    setParseResults({ success: [], errors: [] });
+    setParseResults({ success: [], errors: [], duplicates: [] });
     setShowResults(false);
     setIsSubmitting(false);
+    setErrors({});
     
     // Force a final refresh before closing to ensure all clients see the new foods
     if (refreshFoods) {
@@ -170,6 +210,12 @@ function BulkFoodAddModal({ isOpen, onClose }) {
         </div>
         
         <div className="p-4 overflow-y-auto">
+          {errors.general && (
+            <div className="bg-error/10 text-error p-3 mb-4 rounded-md">
+              {errors.general}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="bulkText" className="block text-sm font-medium text-gray-700 mb-1">
@@ -183,6 +229,9 @@ function BulkFoodAddModal({ isOpen, onClose }) {
               </div>
               <div className="text-xs text-gray-500 mb-2">
                 Note: Fiber is optional. If not provided, it will default to 0g.
+              </div>
+              <div className="text-xs text-gray-500 mb-2">
+                <strong>Note:</strong> All foods added through bulk add will be automatically approved.
               </div>
               <textarea
                 id="bulkText"
@@ -204,11 +253,24 @@ Almonds 579kcal / 21g prot / 22g carb / 50g fat / 12.5g fiber"
                 {parseResults.success.length > 0 && (
                   <div className="mb-3">
                     <div className="text-success font-medium">
-                      Successfully added {parseResults.success.length} food{parseResults.success.length !== 1 ? 's' : ''}:
+                      Successfully added and approved {parseResults.success.length} food{parseResults.success.length !== 1 ? 's' : ''}:
                     </div>
                     <ul className="list-disc pl-5 mt-1 text-sm">
                       {parseResults.success.map((item, index) => (
                         <li key={index} className="text-gray-700">{item.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {parseResults.duplicates.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-warning font-medium">
+                      Skipped {parseResults.duplicates.length} duplicate food{parseResults.duplicates.length !== 1 ? 's' : ''}:
+                    </div>
+                    <ul className="list-disc pl-5 mt-1 text-sm">
+                      {parseResults.duplicates.map((item, index) => (
+                        <li key={index} className="text-gray-700">{item.name} (already exists in database)</li>
                       ))}
                     </ul>
                   </div>

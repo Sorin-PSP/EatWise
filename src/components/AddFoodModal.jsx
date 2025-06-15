@@ -11,6 +11,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
   const { addFood, updateFood, refreshFoods } = foodContext || {};
   const { measurementSystem } = useUser();
   
+  // Platform leaf logo (fallback image)
+  const platformLogo = 'https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750';
+  
   const [formData, setFormData] = useState({
     name: '',
     calories: '',
@@ -20,7 +23,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
     fiber: '',
     serving: '100',
     unit: 'g',
-    category: 'other'
+    category: 'other',
+    approved: true, // Default to approved for manual additions
+    image: '' // Default empty, will be set based on name/category
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +33,58 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
   const [displayUnits, setDisplayUnits] = useState({
     serving: 'g'
   });
+  
+  // Specific food images mapping
+  const specificFoodImages = {
+    'chicken breast': 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'white rice': 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'broccoli': 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'olive oil': 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'apples': 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'avocado': 'https://images.pexels.com/photos/2228553/pexels-photo-2228553.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'almonds': 'https://images.pexels.com/photos/1013420/pexels-photo-1013420.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'eggs': 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'salmon': 'https://images.pexels.com/photos/3296279/pexels-photo-3296279.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'beef': 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    'pork': 'https://images.pexels.com/photos/8308126/pexels-photo-8308126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+  };
+  
+  // Default food images by category
+  const defaultImages = {
+    protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+    other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+  };
+  
+  // Function to get the best image for a food
+  const getFoodImage = (foodName, category) => {
+    // First try to find a specific image for this food by name
+    const foodNameLower = foodName.toLowerCase();
+    
+    // Check if we have an exact match
+    if (specificFoodImages[foodNameLower]) {
+      return specificFoodImages[foodNameLower];
+    }
+    
+    // Check if we have a partial match (food name contains one of our keys)
+    for (const [key, imageUrl] of Object.entries(specificFoodImages)) {
+      if (foodNameLower.includes(key)) {
+        return imageUrl;
+      }
+    }
+    
+    // If no specific image, use category image
+    if (defaultImages[category]) {
+      return defaultImages[category];
+    }
+    
+    // If all else fails, use platform logo
+    return platformLogo;
+  };
   
   // If editing, populate form with food data
   useEffect(() => {
@@ -53,7 +110,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
           fiber: metricFood.fiber || '',
           serving: convertedServing.amount.toString(),
           unit: convertedServing.unit,
-          category: metricFood.category || 'other'
+          category: metricFood.category || 'other',
+          approved: metricFood.approved !== undefined ? metricFood.approved : true,
+          image: metricFood.image || ''
         });
         
         setDisplayUnits({
@@ -70,7 +129,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
           fiber: metricFood.fiber || '',
           serving: metricFood.serving.toString() || '100',
           unit: metricFood.unit || 'g',
-          category: metricFood.category || 'other'
+          category: metricFood.category || 'other',
+          approved: metricFood.approved !== undefined ? metricFood.approved : true,
+          image: metricFood.image || ''
         });
         
         setDisplayUnits({
@@ -90,7 +151,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
           fiber: '',
           serving: '3.5',  // ~100g in oz
           unit: 'oz',
-          category: 'other'
+          category: 'other',
+          approved: true,
+          image: ''
         });
         
         setDisplayUnits({
@@ -107,7 +170,9 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
           fiber: '',
           serving: '100',
           unit: 'g',
-          category: 'other'
+          category: 'other',
+          approved: true,
+          image: ''
         });
         
         setDisplayUnits({
@@ -138,6 +203,17 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
       });
     }
   }, [measurementSystem, formData.unit]);
+  
+  // Update image when name or category changes
+  useEffect(() => {
+    if (formData.name && !editFood) {
+      const newImage = getFoodImage(formData.name, formData.category);
+      setFormData(prev => ({
+        ...prev,
+        image: newImage
+      }));
+    }
+  }, [formData.name, formData.category, editFood]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -224,6 +300,11 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
       };
     }
     
+    // Ensure we have an image
+    if (!metricFoodData.image) {
+      metricFoodData.image = getFoodImage(metricFoodData.name, metricFoodData.category);
+    }
+    
     // Convert string values to numbers
     const foodData = {
       ...metricFoodData,
@@ -232,7 +313,8 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
       carbs: Number(metricFoodData.carbs),
       fat: Number(metricFoodData.fat),
       fiber: Number(metricFoodData.fiber || 0),
-      serving: Number(metricFoodData.serving)
+      serving: Number(metricFoodData.serving),
+      approved: true // Ensure all manually added foods are approved
     };
     
     try {
@@ -293,7 +375,25 @@ function AddFoodModal({ isOpen, onClose, editFood = null }) {
           </div>
         )}
         
-        <form onSubmit={handleSubmit} className="p-4">
+        {/* Preview food image */}
+        <div className="p-4 pb-0">
+          <div className="h-40 rounded-lg overflow-hidden mb-4 bg-gray-100">
+            <img 
+              src={formData.image || getFoodImage(formData.name, formData.category) || platformLogo} 
+              alt={formData.name || "Food preview"} 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // If image fails to load, use platform logo as fallback
+                e.target.src = platformLogo;
+              }}
+            />
+          </div>
+          <p className="text-xs text-gray-500 text-center mb-4">
+            Food image is automatically selected based on name and category
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-4 pt-0">
           <div className="space-y-4">
             {/* Food Name */}
             <div>
