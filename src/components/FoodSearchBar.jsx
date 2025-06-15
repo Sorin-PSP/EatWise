@@ -26,7 +26,7 @@ function FoodSearchBar({ onSearch, className = '' }) {
         <input
           type="search"
           className="input pl-10 pr-10"
-          placeholder="Caută alimente..."
+          placeholder="Search foods..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />

@@ -28,23 +28,23 @@ function LoginPage() {
   
   const validateForm = () => {
     if (!formData.email || !formData.password) {
-      setError('Te rugăm să completezi toate câmpurile obligatorii.');
+      setError('Please fill in all required fields.');
       return false;
     }
     
     if (!isLogin) {
       if (formData.password !== formData.confirmPassword) {
-        setError('Parolele nu coincid.');
+        setError('Passwords do not match.');
         return false;
       }
       
       if (formData.password.length < 6) {
-        setError('Parola trebuie să aibă cel puțin 6 caractere.');
+        setError('Password must be at least 6 characters long.');
         return false;
       }
       
       if (!formData.name) {
-        setError('Te rugăm să introduci numele tău.');
+        setError('Please enter your name.');
         return false;
       }
     }
@@ -68,7 +68,7 @@ function LoginPage() {
         // In a real app, you would verify credentials with your backend
         // For demo purposes, we'll just simulate a successful login
         const userData = {
-          name: isAdmin ? 'Administrator' : 'Utilizator Demo',
+          name: isAdmin ? 'Administrator' : 'Demo User',
           email: formData.email,
           isLoggedIn: true,
           isAdmin: isAdmin
@@ -116,7 +116,7 @@ function LoginPage() {
             Eat<span className="text-secondary">Wise</span>
           </h2>
           <p className="mt-2 text-gray-600">
-            {isLogin ? 'Conectează-te pentru a-ți gestiona nutriția' : 'Creează un cont pentru a începe'}
+            {isLogin ? 'Sign in to manage your nutrition' : 'Create an account to get started'}
           </p>
         </div>
         
@@ -124,12 +124,12 @@ function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <Input
-                label="Nume"
+                label="Name"
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Numele tău complet"
+                placeholder="Your full name"
                 required
               />
             )}
@@ -141,13 +141,13 @@ function LoginPage() {
               type="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="adresa@email.com"
+              placeholder="email@example.com"
               required
               icon={FaUser}
             />
             
             <Input
-              label="Parolă"
+              label="Password"
               id="password"
               name="password"
               type="password"
@@ -160,7 +160,7 @@ function LoginPage() {
             
             {!isLogin && (
               <Input
-                label="Confirmă parola"
+                label="Confirm Password"
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
@@ -185,7 +185,7 @@ function LoginPage() {
               icon={isLogin ? FaSignInAlt : FaUserPlus}
               disabled={loading}
             >
-              {loading ? 'Se procesează...' : isLogin ? 'Conectare' : 'Înregistrare'}
+              {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Register'}
             </Button>
             
             <div className="text-center mt-4">
@@ -194,7 +194,7 @@ function LoginPage() {
                 onClick={toggleMode}
                 className="text-primary hover:text-primary-dark text-sm font-medium"
               >
-                {isLogin ? 'Nu ai cont? Înregistrează-te' : 'Ai deja cont? Conectează-te'}
+                {isLogin ? 'Don\'t have an account? Register' : 'Already have an account? Sign in'}
               </button>
             </div>
           </form>
@@ -206,7 +206,7 @@ function LoginPage() {
           </div>
           <div className="relative flex justify-center text-sm">
             <span className="px-4 bg-gray-50 text-gray-500">
-              Aplicație de nutriție personalizată
+              Personalized nutrition application
             </span>
           </div>
         </div>
@@ -219,7 +219,7 @@ function LoginPage() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4 text-white">
-              <h3 className="font-medium text-sm">Alimentație sănătoasă</h3>
+              <h3 className="font-medium text-sm">Healthy Eating</h3>
             </div>
           </div>
           
@@ -230,7 +230,7 @@ function LoginPage() {
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-4 text-white">
-              <h3 className="font-medium text-sm">Stil de viață activ</h3>
+              <h3 className="font-medium text-sm">Active Lifestyle</h3>
             </div>
           </div>
         </div>

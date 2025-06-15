@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaPlus, FaFilter, FaHeart, FaRegHeart, FaSearch } from 'react-icons/fa';
+import { FaFilter, FaHeart, FaRegHeart, FaSearch } from 'react-icons/fa';
 import FoodSearchBar from '../components/FoodSearchBar';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
+import { useUser } from '../contexts/UserContext';
 
 function FoodDatabasePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('all');
+  const { user } = useUser();
   
   // Sample food data
   const foods = [
     { 
       id: 1, 
-      name: 'Piept de pui', 
+      name: 'Chicken Breast', 
       calories: 165, 
       protein: 31, 
       carbs: 0, 
@@ -24,7 +26,7 @@ function FoodDatabasePage() {
     },
     { 
       id: 2, 
-      name: 'Orez brun', 
+      name: 'Brown Rice', 
       calories: 112, 
       protein: 2.6, 
       carbs: 23.5, 
@@ -54,7 +56,7 @@ function FoodDatabasePage() {
     },
     { 
       id: 5, 
-      name: 'Mere', 
+      name: 'Apples', 
       calories: 52, 
       protein: 0.3, 
       carbs: 13.8, 
@@ -64,7 +66,7 @@ function FoodDatabasePage() {
     },
     { 
       id: 6, 
-      name: 'Iaurt grecesc', 
+      name: 'Greek Yogurt', 
       calories: 59, 
       protein: 10, 
       carbs: 3.6, 
@@ -83,13 +85,13 @@ function FoodDatabasePage() {
   
   // Categories
   const categories = [
-    { id: 'all', name: 'Toate' },
-    { id: 'protein', name: 'Proteine' },
-    { id: 'carbs', name: 'Carbohidrați' },
-    { id: 'fats', name: 'Grăsimi' },
-    { id: 'vegetables', name: 'Legume' },
-    { id: 'fruits', name: 'Fructe' },
-    { id: 'dairy', name: 'Lactate' },
+    { id: 'all', name: 'All' },
+    { id: 'protein', name: 'Protein' },
+    { id: 'carbs', name: 'Carbohydrates' },
+    { id: 'fats', name: 'Fats' },
+    { id: 'vegetables', name: 'Vegetables' },
+    { id: 'fruits', name: 'Fruits' },
+    { id: 'dairy', name: 'Dairy' },
   ];
   
   const handleSearch = (query) => {
@@ -99,13 +101,16 @@ function FoodDatabasePage() {
   return (
     <div>
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold mb-4 md:mb-0">Bază de Date Alimente</h1>
+        <h1 className="text-2xl font-bold mb-4 md:mb-0">Food Database</h1>
         
-        <Link to="/add-food">
-          <Button variant="primary" icon={FaPlus}>
-            Adaugă aliment
-          </Button>
-        </Link>
+        {/* Only show Add Food button for admin users */}
+        {user.isAdmin && (
+          <Link to="/add-food">
+            <Button variant="primary" icon={FaPlus}>
+              Add Food
+            </Button>
+          </Link>
+        )}
       </div>
       
       <div className="relative rounded-xl overflow-hidden mb-6">
@@ -114,8 +119,8 @@ function FoodDatabasePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/90 to-secondary-dark/80"></div>
         <div className="relative z-10 p-6">
           <div className="max-w-xl mx-auto">
-            <h2 className="text-xl font-semibold mb-2 text-white">Caută alimente</h2>
-            <p className="text-white/90 mb-4">Găsește informații nutriționale pentru orice aliment</p>
+            <h2 className="text-xl font-semibold mb-2 text-white">Search Foods</h2>
+            <p className="text-white/90 mb-4">Find nutritional information for any food</p>
             <FoodSearchBar onSearch={handleSearch} className="mb-0" />
           </div>
         </div>
@@ -169,15 +174,15 @@ function FoodDatabasePage() {
                 <div className="grid grid-cols-3 gap-2 text-center text-sm">
                   <div className="bg-gray-50 p-2 rounded">
                     <div className="font-medium">{food.protein}g</div>
-                    <div className="text-gray-500">Proteine</div>
+                    <div className="text-gray-500">Protein</div>
                   </div>
                   <div className="bg-gray-50 p-2 rounded">
                     <div className="font-medium">{food.carbs}g</div>
-                    <div className="text-gray-500">Carbo</div>
+                    <div className="text-gray-500">Carbs</div>
                   </div>
                   <div className="bg-gray-50 p-2 rounded">
                     <div className="font-medium">{food.fat}g</div>
-                    <div className="text-gray-500">Grăsimi</div>
+                    <div className="text-gray-500">Fats</div>
                   </div>
                 </div>
               </Card>
@@ -188,13 +193,16 @@ function FoodDatabasePage() {
         <Card className="text-center py-10">
           <div className="text-gray-500 mb-4">
             <FaSearch className="text-4xl mx-auto mb-4 opacity-30" />
-            <p className="text-lg">Nu am găsit alimente care să corespundă căutării tale</p>
+            <p className="text-lg">No foods found matching your search</p>
           </div>
-          <Link to="/add-food">
-            <Button variant="primary" icon={FaPlus}>
-              Adaugă un aliment nou
-            </Button>
-          </Link>
+          {/* Only show Add Food button for admin users */}
+          {user.isAdmin && (
+            <Link to="/add-food">
+              <Button variant="primary" icon={FaPlus}>
+                Add a new food
+              </Button>
+            </Link>
+          )}
         </Card>
       )}
     </div>

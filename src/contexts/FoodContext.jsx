@@ -6,7 +6,7 @@ const FoodContext = createContext()
 const initialFoods = [
   {
     id: '1',
-    name: 'Piept de pui',
+    name: 'Chicken Breast',
     calories: 165,
     protein: 31,
     carbs: 0,
@@ -18,7 +18,7 @@ const initialFoods = [
   },
   {
     id: '2',
-    name: 'Orez alb',
+    name: 'White Rice',
     calories: 130,
     protein: 2.7,
     carbs: 28,
@@ -42,7 +42,7 @@ const initialFoods = [
   },
   {
     id: '4',
-    name: 'Ulei de măsline',
+    name: 'Olive Oil',
     calories: 884,
     protein: 0,
     carbs: 0,
@@ -54,7 +54,7 @@ const initialFoods = [
   },
   {
     id: '5',
-    name: 'Mere',
+    name: 'Apples',
     calories: 52,
     protein: 0.3,
     carbs: 14,
