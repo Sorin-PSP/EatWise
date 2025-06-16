@@ -76,14 +76,15 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     return foods.some(food => food.name.toLowerCase().trim() === normalizedName);
   };
 
-  const handleSubmit = async (e) => {
+  // Completely new approach using direct localStorage manipulation
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (isSubmitting) {
       return;
     }
     
-    if (!addFood || !foods) {
+    if (!foods) {
       setErrors({
         general: "Food context not available. Please try again later."
       });
@@ -101,54 +102,75 @@ function BulkFoodAddModal({ isOpen, onClose }) {
     
     console.log("Processing lines:", lines.length, "lines");
     
+    if (lines.length === 0) {
+      setErrors({
+        general: "Please enter at least one food item."
+      });
+      setIsSubmitting(false);
+      return;
+    }
+    
     const results = { success: [], errors: [], duplicates: [] };
     
-    // Create a local copy of the foods array to check for duplicates
-    // This helps prevent race conditions when checking for duplicates
-    let localFoodsList = [...foods];
+    // Get current foods from localStorage directly
+    let currentFoods = [];
+    try {
+      const savedFoods = localStorage.getItem('eatwise-foods');
+      if (savedFoods) {
+        currentFoods = JSON.parse(savedFoods);
+      } else {
+        // If no foods in localStorage, use the foods from context
+        currentFoods = [...foods];
+      }
+    } catch (error) {
+      console.error("Error reading foods from localStorage:", error);
+      currentFoods = [...foods]; // Fallback to context
+    }
     
-    // Process each line one by one
+    // Process all lines and create food objects
+    const newFoods = [];
+    const existingFoodNames = new Set(currentFoods.map(food => food.name.toLowerCase().trim()));
+    
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      console.log(`Processing line ${i+1}/${lines.length}: ${line}`);
-      
       const result = parseFood(line);
       
       if (result.success) {
-        // Check if this food already exists in the database
-        if (isDuplicate(result.food.name)) {
-          console.log(`Skipping duplicate food: ${result.food.name}`);
+        const foodName = result.food.name.toLowerCase().trim();
+        
+        // Check for duplicates
+        if (existingFoodNames.has(foodName)) {
           results.duplicates.push({
             name: result.food.name,
             line
           });
-          continue; // Skip to the next food
+          continue;
         }
         
-        try {
-          // Create a copy of the food object to avoid reference issues
-          const foodToAdd = { ...result.food };
-          
-          // Add the food to the database (already approved)
-          const newFood = addFood(foodToAdd);
-          
-          console.log(`Successfully added and approved food: ${foodToAdd.name} with ID: ${newFood.id}`);
-          
-          // Add to local foods list to check for duplicates in subsequent iterations
-          localFoodsList.push(newFood);
-          
-          results.success.push({
-            name: foodToAdd.name,
-            id: newFood.id
-          });
-          
-        } catch (error) {
-          console.error("Error adding food:", error);
-          results.errors.push({
-            line,
-            error: `Error adding food: ${error?.message || 'Unknown error'}`
-          });
-        }
+        // Add to our tracking set to prevent duplicates within the batch
+        existingFoodNames.add(foodName);
+        
+        // Generate a unique ID
+        const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}-${i}`;
+        
+        // Get an image for the food
+        const foodImage = getFoodImage(result.food);
+        
+        // Create the complete food object
+        const newFood = {
+          ...result.food,
+          id: uniqueId,
+          image: foodImage
+        };
+        
+        // Add to our list of new foods
+        newFoods.push(newFood);
+        
+        // Track success
+        results.success.push({
+          name: result.food.name,
+          id: uniqueId
+        });
       } else if (result.error !== 'Empty line') {
         results.errors.push({
           line,
@@ -157,13 +179,33 @@ function BulkFoodAddModal({ isOpen, onClose }) {
       }
     }
     
-    console.log("Final results:", results);
-    
-    // Final refresh to ensure all foods are visible
-    if (refreshFoods) {
-      refreshFoods();
+    // If we have new foods to add, update localStorage directly
+    if (newFoods.length > 0) {
+      try {
+        // Combine current foods with new foods
+        const updatedFoods = [...currentFoods, ...newFoods];
+        
+        // Save directly to localStorage
+        localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods));
+        
+        console.log(`Added ${newFoods.length} new foods directly to localStorage`);
+        
+        // Force a refresh of the foods in the context
+        if (refreshFoods) {
+          setTimeout(() => {
+            refreshFoods();
+          }, 100);
+        }
+      } catch (error) {
+        console.error("Error saving foods to localStorage:", error);
+        results.errors.push({
+          line: "General error",
+          error: `Error saving foods: ${error?.message || 'Unknown error'}`
+        });
+      }
     }
     
+    // Update UI with results
     setParseResults(results);
     setShowResults(true);
     setIsSubmitting(false);
@@ -177,6 +219,61 @@ function BulkFoodAddModal({ isOpen, onClose }) {
         handleClose();
       }, 2000);
     }
+  };
+  
+  // Function to get the best image for a food
+  const getFoodImage = (food) => {
+    // Platform leaf logo (fallback image)
+    const platformLogo = 'https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750';
+    
+    // Default food images by category
+    const defaultImages = {
+      protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+    };
+    
+    // Specific food images mapping
+    const specificFoodImages = {
+      'chicken breast': 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'white rice': 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'broccoli': 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'olive oil': 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'apples': 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'avocado': 'https://images.pexels.com/photos/2228553/pexels-photo-2228553.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'almonds': 'https://images.pexels.com/photos/1013420/pexels-photo-1013420.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'eggs': 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'salmon': 'https://images.pexels.com/photos/3296279/pexels-photo-3296279.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'beef': 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
+      'pork': 'https://images.pexels.com/photos/8308126/pexels-photo-8308126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
+    };
+    
+    // First try to find a specific image for this food by name
+    const foodNameLower = food.name.toLowerCase();
+    
+    // Check if we have an exact match
+    if (specificFoodImages[foodNameLower]) {
+      return specificFoodImages[foodNameLower];
+    }
+    
+    // Check if we have a partial match (food name contains one of our keys)
+    for (const [key, imageUrl] of Object.entries(specificFoodImages)) {
+      if (foodNameLower.includes(key)) {
+        return imageUrl;
+      }
+    }
+    
+    // If no specific image, use category image
+    if (defaultImages[food.category]) {
+      return defaultImages[food.category];
+    }
+    
+    // If all else fails, use platform logo
+    return platformLogo;
   };
 
   const handleClose = () => {

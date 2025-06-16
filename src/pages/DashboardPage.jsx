@@ -36,6 +36,40 @@ function DashboardPage() {
         />
       </div>
       
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-4">Your Meals</h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <MealSection 
+            date={currentDate}
+            mealType="breakfast"
+            title="Breakfast"
+            icon={<FaCoffee className="text-yellow-600" />}
+          />
+          
+          <MealSection 
+            date={currentDate}
+            mealType="lunch"
+            title="Lunch"
+            icon={<FaUtensils className="text-green-600" />}
+          />
+          
+          <MealSection 
+            date={currentDate}
+            mealType="dinner"
+            title="Dinner"
+            icon={<FaMoon className="text-blue-600" />}
+          />
+          
+          <MealSection 
+            date={currentDate}
+            mealType="snacks"
+            title="Snacks"
+            icon={<FaCookie className="text-orange-600" />}
+          />
+        </div>
+      </div>
+      
       <div className="relative rounded-xl overflow-hidden mb-6">
         <div className="absolute inset-0 bg-cover bg-center" 
              style={{backgroundImage: "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
@@ -92,40 +126,6 @@ function DashboardPage() {
           goalWeight={68}
           onUpdateWeight={handleUpdateWeight}
         />
-      </div>
-      
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4">Your Meals</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <MealSection 
-            date={currentDate}
-            mealType="breakfast"
-            title="Breakfast"
-            icon={<FaCoffee className="text-yellow-600" />}
-          />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="lunch"
-            title="Lunch"
-            icon={<FaUtensils className="text-green-600" />}
-          />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="dinner"
-            title="Dinner"
-            icon={<FaMoon className="text-blue-600" />}
-          />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="snacks"
-            title="Snacks"
-            icon={<FaCookie className="text-orange-600" />}
-          />
-        </div>
       </div>
       
       <div className="card">

@@ -247,38 +247,41 @@ export function FoodProvider({ children }) {
     }
   }, [dailyLog, isInitialized])
 
-  const addFood = (newFood) => {
-    // Generate a unique ID based on timestamp and a random number
-    // This helps prevent collisions when adding multiple foods in quick succession
-    const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
-    
-    // Add an image to the food based on its name or category
-    const foodWithImage = {
-      ...newFood,
-      image: newFood.image || getFoodImage(newFood)
-    };
-    
-    const foodWithId = {
-      ...foodWithImage,
-      id: uniqueId
-    }
-    
-    console.log('Adding new food:', foodWithId.name);
-    
-    // Create a new array with the new food to avoid state mutation issues
-    const updatedFoods = [...foods, foodWithId];
-    
-    // Update state with the new food
-    setFoods(updatedFoods);
-    
-    // Immediately save to localStorage for redundancy
-    localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods));
-    
-    // Dispatch a custom event to notify other components that a food has been added
-    window.dispatchEvent(new CustomEvent('foodAdded', { detail: { food: foodWithId } }));
-    
-    return foodWithId;
-  }
+  const addFood = async (newFood) => {
+    return new Promise((resolve) => {
+      // Generate a unique ID based on timestamp and a random number
+      // This helps prevent collisions when adding multiple foods in quick succession
+      const uniqueId = `${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+      
+      // Add an image to the food based on its name or category
+      const foodWithImage = {
+        ...newFood,
+        image: newFood.image || getFoodImage(newFood)
+      };
+      
+      const foodWithId = {
+        ...foodWithImage,
+        id: uniqueId
+      };
+      
+      console.log('Adding new food:', foodWithId.name);
+      
+      // Create a new array with the new food to avoid state mutation issues
+      const updatedFoods = [...foods, foodWithId];
+      
+      // Update state with the new food
+      setFoods(updatedFoods);
+      
+      // Immediately save to localStorage for redundancy
+      localStorage.setItem('eatwise-foods', JSON.stringify(updatedFoods));
+      
+      // Dispatch a custom event to notify other components that a food has been added
+      window.dispatchEvent(new CustomEvent('foodAdded', { detail: { food: foodWithId } }));
+      
+      // Resolve the promise with the new food
+      resolve(foodWithId);
+    });
+  };
 
   const updateFood = (id, updatedFood) => {
     // Ensure the food has an image
@@ -388,31 +391,41 @@ export function FoodProvider({ children }) {
   }
 
   // Function to force refresh foods from localStorage
-  const refreshFoods = () => {
-    const savedFoods = localStorage.getItem('eatwise-foods')
-    if (savedFoods) {
-      try {
-        const parsedFoods = JSON.parse(savedFoods)
-        
-        // Only update if the foods have changed (different length or new items)
-        if (parsedFoods.length !== foods.length) {
-          console.log('Food count changed, refreshing foods from localStorage')
-          setFoods(parsedFoods)
-          return
+  const refreshFoods = async () => {
+    return new Promise((resolve) => {
+      const savedFoods = localStorage.getItem('eatwise-foods')
+      if (savedFoods) {
+        try {
+          const parsedFoods = JSON.parse(savedFoods)
+          
+          // Only update if the foods have changed (different length or new items)
+          if (parsedFoods.length !== foods.length) {
+            console.log('Food count changed, refreshing foods from localStorage')
+            setFoods(parsedFoods)
+            resolve(true)
+            return
+          }
+          
+          // Check if there are any new foods by comparing IDs
+          const currentIds = new Set(foods.map(food => food.id))
+          const hasNewFoods = parsedFoods.some(food => !currentIds.has(food.id))
+          
+          if (hasNewFoods) {
+            console.log('New foods detected, refreshing foods from localStorage')
+            setFoods(parsedFoods)
+            resolve(true)
+            return
+          }
+          
+          resolve(false)
+        } catch (error) {
+          console.error('Error parsing saved foods during refresh:', error)
+          resolve(false)
         }
-        
-        // Check if there are any new foods by comparing IDs
-        const currentIds = new Set(foods.map(food => food.id))
-        const hasNewFoods = parsedFoods.some(food => !currentIds.has(food.id))
-        
-        if (hasNewFoods) {
-          console.log('New foods detected, refreshing foods from localStorage')
-          setFoods(parsedFoods)
-        }
-      } catch (error) {
-        console.error('Error parsing saved foods during refresh:', error)
+      } else {
+        resolve(false)
       }
-    }
+    });
   }
 
   return (

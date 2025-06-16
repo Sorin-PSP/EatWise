@@ -28,93 +28,10 @@ function FoodDatabasePage() {
     { id: 'other', name: 'Other' }
   ];
   
-  // Default food images by category
-  const defaultImages = {
-    protein: 'https://images.pexels.com/photos/616354/pexels-photo-616354.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    carbs: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    fats: 'https://images.pexels.com/photos/557659/pexels-photo-557659.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    vegetables: 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    fruits: 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    dairy: 'https://images.pexels.com/photos/1435706/pexels-photo-1435706.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    other: 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-  };
-  
-  // Platform leaf logo (fallback image)
-  const platformLogo = 'https://images.pexels.com/photos/1407305/pexels-photo-1407305.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750';
-  
-  // Specific food images mapping
-  const specificFoodImages = {
-    'chicken breast': 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'white rice': 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'broccoli': 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'olive oil': 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'apples': 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'avocado': 'https://images.pexels.com/photos/2228553/pexels-photo-2228553.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'almonds': 'https://images.pexels.com/photos/1013420/pexels-photo-1013420.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'eggs': 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'salmon': 'https://images.pexels.com/photos/3296279/pexels-photo-3296279.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'beef': 'https://images.pexels.com/photos/618775/pexels-photo-618775.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'pork': 'https://images.pexels.com/photos/8308126/pexels-photo-8308126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'spinach': 'https://images.pexels.com/photos/2325843/pexels-photo-2325843.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'kale': 'https://images.pexels.com/photos/5945755/pexels-photo-5945755.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'banana': 'https://images.pexels.com/photos/1093038/pexels-photo-1093038.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'orange': 'https://images.pexels.com/photos/42059/citrus-diet-food-fresh-42059.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'strawberry': 'https://images.pexels.com/photos/46174/strawberries-berries-fruit-freshness-46174.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'blueberry': 'https://images.pexels.com/photos/1153655/pexels-photo-1153655.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'milk': 'https://images.pexels.com/photos/248412/pexels-photo-248412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'cheese': 'https://images.pexels.com/photos/821365/pexels-photo-821365.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'yogurt': 'https://images.pexels.com/photos/357573/pexels-photo-357573.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'butter': 'https://images.pexels.com/photos/531334/pexels-photo-531334.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'bread': 'https://images.pexels.com/photos/1775043/pexels-photo-1775043.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'pasta': 'https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'quinoa': 'https://images.pexels.com/photos/7421240/pexels-photo-7421240.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'oats': 'https://images.pexels.com/photos/216951/pexels-photo-216951.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'potato': 'https://images.pexels.com/photos/144248/potatoes-vegetables-erdfrucht-bio-144248.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'sweet potato': 'https://images.pexels.com/photos/89247/pexels-photo-89247.png?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'tofu': 'https://images.pexels.com/photos/884600/pexels-photo-884600.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'lentils': 'https://images.pexels.com/photos/8108209/pexels-photo-8108209.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'chickpeas': 'https://images.pexels.com/photos/8108212/pexels-photo-8108212.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'peanut butter': 'https://images.pexels.com/photos/128865/pexels-photo-128865.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750',
-    'honey': 'https://images.pexels.com/photos/1427888/pexels-photo-1427888.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750'
-  };
-  
-  // Function to get the best image for a food
-  const getFoodImage = (food) => {
-    // First try to find a specific image for this food by name
-    const foodNameLower = food.name.toLowerCase();
-    
-    // Check if we have an exact match
-    if (specificFoodImages[foodNameLower]) {
-      return specificFoodImages[foodNameLower];
-    }
-    
-    // Check if we have a partial match (food name contains one of our keys)
-    for (const [key, imageUrl] of Object.entries(specificFoodImages)) {
-      if (foodNameLower.includes(key)) {
-        return imageUrl;
-      }
-    }
-    
-    // If no specific image, use category image
-    if (defaultImages[food.category]) {
-      return defaultImages[food.category];
-    }
-    
-    // If all else fails, use platform logo
-    return platformLogo;
-  };
-  
   // Update displayFoods whenever foods from context changes
   useEffect(() => {
     console.log('FoodDatabasePage: Foods from context updated:', foods.length);
-    
-    // Prepare foods for display with images
-    const foodsWithImages = foods.map(food => ({
-      ...food,
-      image: getFoodImage(food)
-    }));
-    
-    setDisplayFoods(foodsWithImages);
+    setDisplayFoods(foods);
   }, [foods]);
   
   // Set up event listeners for food updates
@@ -242,17 +159,6 @@ function FoodDatabasePage() {
           {filteredFoods.map(food => (
             <Link to={`/food/${food.id}`} key={food.id}>
               <Card className="h-full hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
-                <div className="h-40 rounded-lg overflow-hidden mb-4">
-                  <img 
-                    src={food.image} 
-                    alt={food.name} 
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // If image fails to load, use platform logo as fallback
-                      e.target.src = platformLogo;
-                    }}
-                  />
-                </div>
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-medium text-lg">{food.name}</h3>
                   <button className="text-gray-400 hover:text-error">
