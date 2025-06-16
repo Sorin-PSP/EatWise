@@ -10,7 +10,14 @@ export function UserProvider({ children }) {
     id: null,
     dailyCalorieGoal: 2000, // Default value
     measurementSystem: 'metric', // Default measurement system
-    isAdmin: false // Added isAdmin property
+    isAdmin: false, // Added isAdmin property
+    weight: null,
+    startWeight: null,
+    goalWeight: null,
+    proteinGoal: 120,
+    carbsGoal: 250,
+    fatGoal: 70,
+    waterGoal: 8
   });
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,11 +29,30 @@ export function UserProvider({ children }) {
       if (savedUser) {
         try {
           const parsedUser = JSON.parse(savedUser);
+          
+          // Load weight data from weight tracker if available
+          let weightData = {};
+          const savedWeightData = localStorage.getItem('eatwise-weight');
+          if (savedWeightData) {
+            try {
+              weightData = JSON.parse(savedWeightData);
+            } catch (error) {
+              console.error('Error parsing weight data:', error);
+            }
+          }
+          
           setUser({
             ...parsedUser,
             isLoggedIn: true,
             dailyCalorieGoal: parsedUser.dailyCalorieGoal || 2000,
-            measurementSystem: parsedUser.measurementSystem || 'metric'
+            measurementSystem: parsedUser.measurementSystem || 'metric',
+            weight: parsedUser.weight || weightData.current || null,
+            startWeight: parsedUser.startWeight || weightData.start || null,
+            goalWeight: parsedUser.goalWeight || weightData.goal || null,
+            proteinGoal: parsedUser.proteinGoal || 120,
+            carbsGoal: parsedUser.carbsGoal || 250,
+            fatGoal: parsedUser.fatGoal || 70,
+            waterGoal: parsedUser.waterGoal || 8
           });
           
           // Check if user is admin
@@ -41,7 +67,14 @@ export function UserProvider({ children }) {
             id: null,
             dailyCalorieGoal: 2000,
             measurementSystem: 'metric',
-            isAdmin: false
+            isAdmin: false,
+            weight: null,
+            startWeight: null,
+            goalWeight: null,
+            proteinGoal: 120,
+            carbsGoal: 250,
+            fatGoal: 70,
+            waterGoal: 8
           });
           setIsAdmin(false);
         }
@@ -72,7 +105,14 @@ export function UserProvider({ children }) {
         isLoggedIn: true,
         dailyCalorieGoal: 2000,
         measurementSystem: 'metric',
-        isAdmin: true
+        isAdmin: true,
+        weight: null,
+        startWeight: null,
+        goalWeight: null,
+        proteinGoal: 120,
+        carbsGoal: 250,
+        fatGoal: 70,
+        waterGoal: 8
       };
       
       setUser(userData);
@@ -87,7 +127,14 @@ export function UserProvider({ children }) {
         isLoggedIn: true,
         dailyCalorieGoal: 2000,
         measurementSystem: 'metric',
-        isAdmin: false
+        isAdmin: false,
+        weight: null,
+        startWeight: null,
+        goalWeight: null,
+        proteinGoal: 120,
+        carbsGoal: 250,
+        fatGoal: 70,
+        waterGoal: 8
       };
       
       setUser(userData);
@@ -109,7 +156,14 @@ export function UserProvider({ children }) {
       id: null,
       dailyCalorieGoal: 2000,
       measurementSystem: 'metric',
-      isAdmin: false
+      isAdmin: false,
+      weight: null,
+      startWeight: null,
+      goalWeight: null,
+      proteinGoal: 120,
+      carbsGoal: 250,
+      fatGoal: 70,
+      waterGoal: 8
     });
     setIsAdmin(false);
     localStorage.removeItem('eatwise-user');

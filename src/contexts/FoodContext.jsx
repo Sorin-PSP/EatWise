@@ -319,53 +319,90 @@ export function FoodProvider({ children }) {
   }
 
   const addFoodToLog = (date, mealType, food, quantity) => {
-    const dateLog = dailyLog[date] || { breakfast: [], lunch: [], dinner: [], snacks: [] }
+    // Handle "all" meal type by using "breakfast" as default
+    const actualMealType = mealType === "all" ? "breakfast" : mealType;
+    
+    const dateLog = dailyLog[date] || { breakfast: [], lunch: [], dinner: [], snacks: [] };
+    
+    // Create the food log item with the original mealType for reference
+    const foodLogItem = {
+      id: Date.now().toString(),
+      foodId: food.id,
+      name: food.name,
+      quantity,
+      calories: Math.round((food.calories * quantity) / food.serving),
+      protein: Math.round((food.protein * quantity) / food.serving * 10) / 10,
+      carbs: Math.round((food.carbs * quantity) / food.serving * 10) / 10,
+      fat: Math.round((food.fat * quantity) / food.serving * 10) / 10,
+      fiber: Math.round((food.fiber * quantity) / food.serving * 10) / 10,
+      image: food.image, // Include the food image in the log
+      mealType: actualMealType // Store the meal type with the item for reference when removing
+    };
     
     const updatedLog = {
       ...dailyLog,
       [date]: {
         ...dateLog,
-        [mealType]: [
-          ...dateLog[mealType],
-          {
-            id: Date.now().toString(),
-            foodId: food.id,
-            name: food.name,
-            quantity,
-            calories: Math.round((food.calories * quantity) / food.serving),
-            protein: Math.round((food.protein * quantity) / food.serving * 10) / 10,
-            carbs: Math.round((food.carbs * quantity) / food.serving * 10) / 10,
-            fat: Math.round((food.fat * quantity) / food.serving * 10) / 10,
-            fiber: Math.round((food.fiber * quantity) / food.serving * 10) / 10,
-            image: food.image // Include the food image in the log
-          }
+        [actualMealType]: [
+          ...dateLog[actualMealType],
+          foodLogItem
         ]
       }
-    }
+    };
     
-    setDailyLog(updatedLog)
+    setDailyLog(updatedLog);
     
     // Immediately save to localStorage
-    localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog))
+    localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog));
   }
 
   const removeFoodFromLog = (date, mealType, logItemId) => {
-    if (!dailyLog[date]) return
+    if (!dailyLog[date]) return;
     
-    const updatedMeal = dailyLog[date][mealType].filter(item => item.id !== logItemId)
-    
-    const updatedLog = {
-      ...dailyLog,
-      [date]: {
-        ...dailyLog[date],
-        [mealType]: updatedMeal
+    // If mealType is "all", we need to search in all meal types
+    if (mealType === "all") {
+      const mealTypes = ["breakfast", "lunch", "dinner", "snacks"];
+      let found = false;
+      
+      const updatedDateLog = { ...dailyLog[date] };
+      
+      // Search through all meal types to find and remove the item
+      mealTypes.forEach(type => {
+        if (updatedDateLog[type] && !found) {
+          const itemIndex = updatedDateLog[type].findIndex(item => item.id === logItemId);
+          if (itemIndex !== -1) {
+            updatedDateLog[type] = updatedDateLog[type].filter(item => item.id !== logItemId);
+            found = true;
+          }
+        }
+      });
+      
+      if (found) {
+        const updatedLog = {
+          ...dailyLog,
+          [date]: updatedDateLog
+        };
+        
+        setDailyLog(updatedLog);
+        localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog));
       }
+    } else {
+      // Original behavior for specific meal types
+      if (!dailyLog[date][mealType]) return;
+      
+      const updatedMeal = dailyLog[date][mealType].filter(item => item.id !== logItemId);
+      
+      const updatedLog = {
+        ...dailyLog,
+        [date]: {
+          ...dailyLog[date],
+          [mealType]: updatedMeal
+        }
+      };
+      
+      setDailyLog(updatedLog);
+      localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog));
     }
-    
-    setDailyLog(updatedLog)
-    
-    // Immediately save to localStorage
-    localStorage.setItem('eatwise-dailyLog', JSON.stringify(updatedLog))
   }
 
   const getDailyNutrition = (date) => {

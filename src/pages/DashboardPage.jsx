@@ -1,29 +1,116 @@
-import { FaCoffee, FaUtensils, FaMoon, FaCookie } from 'react-icons/fa'
+import { useState, useEffect } from 'react'
 import DateSelector from '../components/DateSelector'
 import NutritionSummary from '../components/NutritionSummary'
 import MealSection from '../components/MealSection'
 import NutritionChart from '../components/NutritionChart'
 import { useFood } from '../contexts/FoodContext'
+import { useUser } from '../contexts/UserContext'
 import CalorieProgressCard from '../components/CalorieProgressCard'
 import NutrientsSummary from '../components/NutrientsSummary'
 import DailyWaterTracker from '../components/DailyWaterTracker'
 import WeightTracker from '../components/WeightTracker'
 
 function DashboardPage() {
-  const { currentDate, setCurrentDate } = useFood()
+  const { currentDate, setCurrentDate, getDailyNutrition } = useFood()
+  const { user, updateUser } = useUser()
+  const [waterIntake, setWaterIntake] = useState(0)
   
-  // Sample data for demonstration
+  // Use user profile data for goals if available
+  const calorieGoal = user.dailyCalorieGoal || 2000
+  const proteinGoal = user.proteinGoal || 120
+  const carbsGoal = user.carbsGoal || 250
+  const fatGoal = user.fatGoal || 70
+  const waterGoal = user.waterGoal || 8
+  
+  // Get daily nutrition data
+  const dailyNutrition = getDailyNutrition(currentDate)
+  
+  // Load water data from localStorage on component mount
+  useEffect(() => {
+    const loadWaterData = () => {
+      const savedWaterData = localStorage.getItem('eatwise-water')
+      if (savedWaterData) {
+        try {
+          const parsedData = JSON.parse(savedWaterData)
+          if (parsedData[currentDate]) {
+            setWaterIntake(parsedData[currentDate])
+          } else {
+            setWaterIntake(0)
+          }
+        } catch (error) {
+          console.error('Error parsing water data:', error)
+          setWaterIntake(0)
+        }
+      }
+    }
+    
+    loadWaterData()
+  }, [currentDate])
+  
+  // Handle water intake changes
   const handleWaterIncrement = () => {
-    console.log('Water increment')
+    const newValue = waterIntake + 1
+    setWaterIntake(newValue)
+    saveWaterData(newValue)
   }
   
   const handleWaterDecrement = () => {
-    console.log('Water decrement')
+    if (waterIntake > 0) {
+      const newValue = waterIntake - 1
+      setWaterIntake(newValue)
+      saveWaterData(newValue)
+    }
   }
   
-  const handleUpdateWeight = () => {
-    console.log('Update weight')
+  const saveWaterData = (value) => {
+    try {
+      const savedWaterData = localStorage.getItem('eatwise-water')
+      const waterData = savedWaterData ? JSON.parse(savedWaterData) : {}
+      
+      waterData[currentDate] = value
+      
+      localStorage.setItem('eatwise-water', JSON.stringify(waterData))
+    } catch (error) {
+      console.error('Error saving water data:', error)
+    }
   }
+  
+  // Handle weight update
+  const handleUpdateWeight = (weight) => {
+    // Update user profile with new weight
+    const userData = {
+      weight: weight
+    }
+    
+    // If this is the first weight entry, set it as both current and start weight
+    if (!user.weight) {
+      userData.startWeight = weight
+    }
+    
+    // If no goal weight is set, default to 10% less than current weight
+    if (!user.goalWeight) {
+      userData.goalWeight = Math.round(weight * 0.9 * 10) / 10 // Round to 1 decimal place
+    }
+    
+    updateUser(userData)
+    
+    // Also save to localStorage for backward compatibility
+    try {
+      const weightData = {
+        current: weight,
+        start: user.startWeight || weight,
+        goal: user.goalWeight || userData.goalWeight,
+        lastUpdated: new Date().toISOString()
+      }
+      
+      localStorage.setItem('eatwise-weight', JSON.stringify(weightData))
+    } catch (error) {
+      console.error('Error saving weight data:', error)
+    }
+  }
+  
+  // Calculate remaining calories
+  const remainingCalories = calorieGoal - dailyNutrition.calories
   
   return (
     <div>
@@ -39,62 +126,29 @@ function DashboardPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">Your Meals</h2>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <MealSection 
             date={currentDate}
-            mealType="breakfast"
-            title="Breakfast"
-            icon={<FaCoffee className="text-yellow-600" />}
+            mealType="all"
+            title="All Meals"
           />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="lunch"
-            title="Lunch"
-            icon={<FaUtensils className="text-green-600" />}
-          />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="dinner"
-            title="Dinner"
-            icon={<FaMoon className="text-blue-600" />}
-          />
-          
-          <MealSection 
-            date={currentDate}
-            mealType="snacks"
-            title="Snacks"
-            icon={<FaCookie className="text-orange-600" />}
-          />
-        </div>
-      </div>
-      
-      <div className="relative rounded-xl overflow-hidden mb-6">
-        <div className="absolute inset-0 bg-cover bg-center" 
-             style={{backgroundImage: "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary-dark/80"></div>
-        <div className="relative z-10 p-6 text-white">
-          <h2 className="text-xl font-semibold mb-2">Daily Summary</h2>
-          <p className="mb-4">Keep maintaining healthy habits!</p>
-          <NutritionSummary date={currentDate} />
         </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <CalorieProgressCard 
-          consumed={1450} 
-          goal={2000} 
-          remaining={550}
+          consumed={dailyNutrition.calories} 
+          goal={calorieGoal} 
+          remaining={remainingCalories}
         />
         
         <NutrientsSummary 
-          protein={65} 
-          proteinGoal={120}
-          carbs={180} 
-          carbsGoal={250}
-          fat={45} 
-          fatGoal={70}
+          protein={dailyNutrition.protein} 
+          proteinGoal={proteinGoal}
+          carbs={dailyNutrition.carbs} 
+          carbsGoal={carbsGoal}
+          fat={dailyNutrition.fat} 
+          fatGoal={fatGoal}
         />
         
         <div className="card relative overflow-hidden">
@@ -114,18 +168,29 @@ function DashboardPage() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <DailyWaterTracker 
-          current={5} 
-          goal={8}
+          current={waterIntake} 
+          goal={waterGoal}
           onIncrement={handleWaterIncrement}
           onDecrement={handleWaterDecrement}
         />
         
         <WeightTracker 
-          currentWeight={72.5} 
-          startWeight={75}
-          goalWeight={68}
+          currentWeight={user.weight} 
+          startWeight={user.startWeight}
+          goalWeight={user.goalWeight}
           onUpdateWeight={handleUpdateWeight}
         />
+      </div>
+      
+      <div className="relative rounded-xl overflow-hidden mb-6">
+        <div className="absolute inset-0 bg-cover bg-center" 
+             style={{backgroundImage: "url('https://images.pexels.com/photos/1640773/pexels-photo-1640773.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750')"}}></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-primary-dark/80"></div>
+        <div className="relative z-10 p-6 text-white">
+          <h2 className="text-xl font-semibold mb-2">Daily Summary</h2>
+          <p className="mb-4">Keep maintaining healthy habits!</p>
+          <NutritionSummary date={currentDate} />
+        </div>
       </div>
       
       <div className="card">

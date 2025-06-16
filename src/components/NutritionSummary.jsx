@@ -1,90 +1,83 @@
-import { useFood } from '../contexts/FoodContext'
-import { useUser } from '../contexts/UserContext'
-import { FaFire, FaDrumstickBite, FaBreadSlice, FaOilCan } from 'react-icons/fa'
+import React from 'react';
+import { useFood } from '../contexts/FoodContext';
 
 function NutritionSummary({ date }) {
-  const { getDailyNutrition } = useFood()
-  const { user } = useUser()
+  const { getDailyNutrition } = useFood();
   
-  const nutrition = getDailyNutrition(date)
+  // Get nutrition data for the specified date
+  const nutrition = getDailyNutrition(date);
   
-  const calculatePercentage = (value, goal) => {
-    if (!goal) return 0
-    const percentage = (value / goal) * 100
-    return Math.min(percentage, 100)
-  }
+  // Define nutrition goals
+  const calorieGoal = 2000;
+  const proteinGoal = 120;
+  const carbsGoal = 250;
+  const fatGoal = 70;
+  
+  // Calculate percentages
+  const caloriePercentage = Math.min(Math.round((nutrition.calories / calorieGoal) * 100), 100);
+  const proteinPercentage = Math.min(Math.round((nutrition.protein / proteinGoal) * 100), 100);
+  const carbsPercentage = Math.min(Math.round((nutrition.carbs / carbsGoal) * 100), 100);
+  const fatPercentage = Math.min(Math.round((nutrition.fat / fatGoal) * 100), 100);
   
   return (
-    <div className="card mb-6">
-      <h2 className="text-xl font-semibold mb-4">Nutritional Summary</h2>
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div>
+        <div className="text-sm opacity-80 mb-1">Calories</div>
+        <div className="flex items-baseline">
+          <span className="text-2xl font-bold">{nutrition.calories}</span>
+          <span className="ml-1 opacity-80">/ {calorieGoal}</span>
+        </div>
+        <div className="w-full bg-white/20 h-1 mt-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-white h-full rounded-full" 
+            style={{ width: `${caloriePercentage}%` }}
+          ></div>
+        </div>
+      </div>
       
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <FaFire className="text-orange-500 mr-2" />
-              <span>Calories</span>
-            </div>
-            <span className="font-medium">{nutrition.calories} / {user.dailyCalorieGoal} kcal</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-orange-500 h-2.5 rounded-full" 
-              style={{ width: `${calculatePercentage(nutrition.calories, user.dailyCalorieGoal)}%` }}
-            ></div>
-          </div>
+      <div>
+        <div className="text-sm opacity-80 mb-1">Protein</div>
+        <div className="flex items-baseline">
+          <span className="text-2xl font-bold">{nutrition.protein}g</span>
+          <span className="ml-1 opacity-80">/ {proteinGoal}g</span>
         </div>
-        
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <FaDrumstickBite className="text-red-500 mr-2" />
-              <span>Protein</span>
-            </div>
-            <span className="font-medium">{nutrition.protein} / {user.dailyProteinGoal} g</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-red-500 h-2.5 rounded-full" 
-              style={{ width: `${calculatePercentage(nutrition.protein, user.dailyProteinGoal)}%` }}
-            ></div>
-          </div>
+        <div className="w-full bg-white/20 h-1 mt-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-white h-full rounded-full" 
+            style={{ width: `${proteinPercentage}%` }}
+          ></div>
         </div>
-        
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <FaBreadSlice className="text-yellow-500 mr-2" />
-              <span>Carbs</span>
-            </div>
-            <span className="font-medium">{nutrition.carbs} / {user.dailyCarbsGoal} g</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-yellow-500 h-2.5 rounded-full" 
-              style={{ width: `${calculatePercentage(nutrition.carbs, user.dailyCarbsGoal)}%` }}
-            ></div>
-          </div>
+      </div>
+      
+      <div>
+        <div className="text-sm opacity-80 mb-1">Carbs</div>
+        <div className="flex items-baseline">
+          <span className="text-2xl font-bold">{nutrition.carbs}g</span>
+          <span className="ml-1 opacity-80">/ {carbsGoal}g</span>
         </div>
-        
-        <div>
-          <div className="flex justify-between items-center mb-1">
-            <div className="flex items-center">
-              <FaOilCan className="text-blue-500 mr-2" />
-              <span>Fat</span>
-            </div>
-            <span className="font-medium">{nutrition.fat} / {user.dailyFatGoal} g</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <div 
-              className="bg-blue-500 h-2.5 rounded-full" 
-              style={{ width: `${calculatePercentage(nutrition.fat, user.dailyFatGoal)}%` }}
-            ></div>
-          </div>
+        <div className="w-full bg-white/20 h-1 mt-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-white h-full rounded-full" 
+            style={{ width: `${carbsPercentage}%` }}
+          ></div>
+        </div>
+      </div>
+      
+      <div>
+        <div className="text-sm opacity-80 mb-1">Fat</div>
+        <div className="flex items-baseline">
+          <span className="text-2xl font-bold">{nutrition.fat}g</span>
+          <span className="ml-1 opacity-80">/ {fatGoal}g</span>
+        </div>
+        <div className="w-full bg-white/20 h-1 mt-2 rounded-full overflow-hidden">
+          <div 
+            className="bg-white h-full rounded-full" 
+            style={{ width: `${fatPercentage}%` }}
+          ></div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default NutritionSummary
+export default NutritionSummary;

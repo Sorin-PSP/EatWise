@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaFilter, FaHeart, FaRegHeart, FaSearch, FaPlus, FaSync } from 'react-icons/fa';
+import { FaFilter, FaHeart, FaRegHeart, FaSearch, FaPlus, FaSync, FaPaperPlane } from 'react-icons/fa';
 import FoodSearchBar from '../components/FoodSearchBar';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import Badge from '../components/Badge';
+import Input from '../components/Input';
 import { useUser } from '../contexts/UserContext';
 import { useFood } from '../contexts/FoodContext';
 
@@ -15,6 +16,8 @@ function FoodDatabasePage() {
   const { foods, refreshFoods } = useFood();
   const [displayFoods, setDisplayFoods] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
   // Categories
   const categories = [
@@ -97,12 +100,44 @@ function FoodDatabasePage() {
     }, 1000);
   };
   
+  const handleFeedbackSubmit = () => {
+    if (feedbackText.trim()) {
+      // In a real app, you would send this to a server
+      console.log('Food feedback submitted:', feedbackText);
+      
+      // Store feedback in localStorage for demo purposes
+      try {
+        const savedFeedback = localStorage.getItem('eatwise-food-feedback') || '[]';
+        const feedbackList = JSON.parse(savedFeedback);
+        
+        feedbackList.push({
+          text: feedbackText,
+          date: new Date().toISOString(),
+          user: user.email || 'anonymous'
+        });
+        
+        localStorage.setItem('eatwise-food-feedback', JSON.stringify(feedbackList));
+        
+        // Show success message
+        setFeedbackSubmitted(true);
+        setFeedbackText('');
+        
+        // Reset success message after 3 seconds
+        setTimeout(() => {
+          setFeedbackSubmitted(false);
+        }, 3000);
+      } catch (error) {
+        console.error('Error saving feedback:', error);
+      }
+    }
+  };
+  
   return (
     <div>
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
         <h1 className="text-2xl font-bold mb-4 md:mb-0">Food Database</h1>
         
-        <div className="flex space-x-2">
+        <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-2 w-full md:w-auto">
           <Button 
             variant="outline" 
             icon={FaSync} 
@@ -121,6 +156,33 @@ function FoodDatabasePage() {
             </Link>
           )}
         </div>
+      </div>
+      
+      {/* Feedback field */}
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <h3 className="text-sm font-medium text-gray-700 mb-2">
+          If you searched for a food, meal, food product or drink that you didn't find in the list, write it here and we will update the list with this product as soon as possible
+        </h3>
+        <div className="flex">
+          <Input
+            placeholder="Enter food item name..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            className="mb-0 flex-grow"
+          />
+          <Button
+            variant="primary"
+            icon={FaPaperPlane}
+            onClick={handleFeedbackSubmit}
+            className="ml-2"
+            disabled={!feedbackText.trim()}
+          >
+            Submit
+          </Button>
+        </div>
+        {feedbackSubmitted && (
+          <p className="text-success text-sm mt-2">Thank you for your feedback! We'll add this food item soon.</p>
+        )}
       </div>
       
       <div className="relative rounded-xl overflow-hidden mb-6">

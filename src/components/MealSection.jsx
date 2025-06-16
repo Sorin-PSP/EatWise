@@ -3,20 +3,41 @@ import { useFood } from '../contexts/FoodContext'
 import { FaPlus, FaTrash } from 'react-icons/fa'
 import FoodSelector from './FoodSelector'
 
-function MealSection({ date, mealType, title, icon }) {
+function MealSection({ date, mealType, title }) {
   const { dailyLog, removeFoodFromLog } = useFood()
   const [showFoodSelector, setShowFoodSelector] = useState(false)
   
-  const mealItems = dailyLog[date]?.[mealType] || []
+  // Get all food items for the day, regardless of meal type
+  const getAllMealItems = () => {
+    if (!dailyLog[date]) return [];
+    
+    const allItems = [];
+    
+    // If mealType is "all", combine all meal types
+    if (mealType === "all") {
+      const mealTypes = ["breakfast", "lunch", "dinner", "snacks"];
+      mealTypes.forEach(type => {
+        if (dailyLog[date][type]) {
+          allItems.push(...dailyLog[date][type]);
+        }
+      });
+    } else if (dailyLog[date][mealType]) {
+      // Otherwise, just get the specific meal type
+      allItems.push(...dailyLog[date][mealType]);
+    }
+    
+    return allItems;
+  };
   
-  const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0)
+  const mealItems = getAllMealItems();
+  
+  const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
   
   return (
     <div className="card mb-4">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
-          {icon}
-          <h3 className="text-lg font-medium ml-2">{title}</h3>
+          <h3 className="text-lg font-medium">{title}</h3>
         </div>
         <span className="text-gray-600 font-medium">{totalCalories} kcal</span>
       </div>
@@ -34,7 +55,7 @@ function MealSection({ date, mealType, title, icon }) {
                   P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
                 </p>
                 <button 
-                  onClick={() => removeFoodFromLog(date, mealType, item.id)}
+                  onClick={() => removeFoodFromLog(date, item.mealType || "all", item.id)}
                   className="text-red-500 hover:text-red-700"
                   aria-label="Delete food"
                 >
@@ -45,7 +66,7 @@ function MealSection({ date, mealType, title, icon }) {
           ))}
         </ul>
       ) : (
-        <p className="text-gray-500 text-center py-4">You haven't added any food to {title.toLowerCase()}</p>
+        <p className="text-gray-500 text-center py-4">You haven't added any food yet</p>
       )}
       
       <button 
