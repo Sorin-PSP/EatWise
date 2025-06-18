@@ -5,6 +5,7 @@ import Card from '../components/Card';
 import Input from '../components/Input';
 import Button from '../components/Button';
 import { useUser } from '../contexts/UserContext';
+import { supabase } from '../lib/supabaseClient';
 
 function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,7 +19,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { updateUser, login } = useUser();
+  const { login } = useUser();
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,21 +53,19 @@ function LoginPage() {
     return true;
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
     setLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
       if (isLogin) {
         // Use the login function from context
-        const result = login(formData.email, formData.password);
+        const result = await login(formData.email, formData.password);
         
         if (result.success) {
-          setLoading(false);
           // Redirect admin users to admin dashboard
           if (formData.email === 'AdminEatWise@gmail.com') {
             navigate('/admin/dashboard');
@@ -75,25 +74,47 @@ function LoginPage() {
           }
         } else {
           setError(result.error || 'Invalid credentials');
-          setLoading(false);
         }
       } else {
-        // In a real app, you would register the user with your backend
-        // For demo purposes, we'll just simulate a successful registration
-        const userData = {
-          name: formData.name,
+        // Register new user
+        const { data, error } = await supabase.auth.signUp({
           email: formData.email,
-          isLoggedIn: true,
-          isAdmin: false
-        };
+          password: formData.password
+        });
         
-        // Save to context and localStorage
-        updateUser(userData);
-        
-        setLoading(false);
-        navigate('/profile');
+        if (error) {
+          setError(error.message);
+        } else {
+          // Create profile for new user
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: data.user.id,
+              email: formData.email,
+              name: formData.name,
+              measurement_system: 'metric',
+              daily_calorie_goal: 2000,
+              protein_goal: 120,
+              carbs_goal: 250,
+              fat_goal: 70,
+              water_goal: 8
+            }]);
+            
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+            setError('Account created but there was an error setting up your profile.');
+          } else {
+            // Redirect to profile page to complete setup
+            navigate('/profile');
+          }
+        }
       }
-    }, 1500);
+    } catch (err) {
+      console.error('Authentication error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
   
   const toggleMode = () => {

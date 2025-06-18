@@ -131,18 +131,25 @@ function AdminFoodDatabase() {
             />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <FaFilter className="text-gray-500" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-            >
-              <option value="all">All Status</option>
-              <option value="approved">Approved</option>
-              <option value="pending">Pending</option>
-              <option value="rejected">Rejected</option>
-            </select>
+          <div className="flex items-center space-x-4">
+            {/* Added item count information */}
+            <div className="text-sm text-gray-500">
+              Showing <span className="font-medium">{filteredFoods.length}</span> of <span className="font-medium">{foodItems.length}</span> items
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <FaFilter className="text-gray-500" />
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="all">All Status</option>
+                <option value="approved">Approved</option>
+                <option value="pending">Pending</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -245,11 +252,8 @@ function AdminFoodDatabase() {
         )}
       </div>
       
-      {/* Pagination */}
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          Showing <span className="font-medium">{filteredFoods.length}</span> of <span className="font-medium">{foodItems.length}</span> items
-        </div>
+      {/* Pagination - Removed duplicate item count since it's now in the top filter section */}
+      <div className="flex justify-end items-center">
         <div className="flex space-x-1">
           <button className="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50">
             Previous
