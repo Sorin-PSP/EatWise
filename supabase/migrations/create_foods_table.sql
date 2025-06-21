@@ -1,121 +1,123 @@
 /*
-  # Create foods table
-
+  # Creare tabel pentru alimente
+  
   1. New Tables
     - `foods`
       - `id` (uuid, primary key)
       - `name` (text, not null)
       - `calories` (integer, not null)
-      - `protein` (decimal, not null)
-      - `carbs` (decimal, not null)
-      - `fat` (decimal, not null)
-      - `fiber` (decimal, default 0)
-      - `serving` (decimal, not null)
+      - `protein` (numeric, not null)
+      - `carbs` (numeric, not null)
+      - `fat` (numeric, not null)
+      - `fiber` (numeric)
+      - `serving` (numeric, not null)
       - `unit` (text, not null)
-      - `category` (text, references food_categories)
-      - `image` (text, nullable)
+      - `category` (text, not null)
+      - `image` (text)
       - `approved` (boolean, default true)
-      - `created_by` (uuid, references profiles)
-      - `created_at` (timestamp with time zone, default now())
-      - `updated_at` (timestamp with time zone, default now())
+      - `user_id` (uuid, references auth.users)
+      - `created_at` (timestamptz, default now())
   
   2. Security
     - Enable RLS on `foods` table
-    - Add policy for all users to read approved foods
-    - Add policy for users to read their own unapproved foods
-    - Add policy for users to create foods
-    - Add policy for users to update their own foods
-    - Add policy for admins to update any food
-    - Add policy for admins to delete any food
+    - Add policies for authenticated users to read all approved foods
+    - Add policies for users to manage their own foods
+    - Add policies for admins to manage all foods
 */
 
-CREATE TABLE IF NOT EXISTS foods (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  calories INTEGER NOT NULL,
-  protein DECIMAL NOT NULL,
-  carbs DECIMAL NOT NULL,
-  fat DECIMAL NOT NULL,
-  fiber DECIMAL DEFAULT 0,
-  serving DECIMAL NOT NULL,
-  unit TEXT NOT NULL,
-  category TEXT REFERENCES food_categories(name),
-  image TEXT,
-  approved BOOLEAN DEFAULT true,
-  created_by UUID REFERENCES profiles(id),
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
+-- Create foods table
+CREATE TABLE IF NOT EXISTS public.foods (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  calories integer NOT NULL,
+  protein numeric NOT NULL,
+  carbs numeric NOT NULL,
+  fat numeric NOT NULL,
+  fiber numeric DEFAULT 0,
+  serving numeric NOT NULL,
+  unit text NOT NULL,
+  category text NOT NULL,
+  image text,
+  approved boolean DEFAULT true,
+  user_id uuid REFERENCES auth.users(id),
+  created_at timestamptz DEFAULT now()
 );
 
-CREATE INDEX foods_category_idx ON foods(category);
-CREATE INDEX foods_created_by_idx ON foods(created_by);
+-- Create index for faster searches
+CREATE INDEX IF NOT EXISTS foods_name_idx ON public.foods USING gin (name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS foods_category_idx ON public.foods (category);
+CREATE INDEX IF NOT EXISTS foods_user_id_idx ON public.foods (user_id);
 
-ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
+-- Enable row level security
+ALTER TABLE public.foods ENABLE ROW LEVEL SECURITY;
 
--- Policy for all users to read approved foods
+-- Create policies
+-- Everyone can read approved foods
 CREATE POLICY "Anyone can read approved foods"
-  ON foods
+  ON public.foods
   FOR SELECT
-  TO authenticated
   USING (approved = true);
 
--- Policy for users to read their own unapproved foods
+-- Users can read their own unapproved foods
 CREATE POLICY "Users can read their own unapproved foods"
-  ON foods
+  ON public.foods
   FOR SELECT
   TO authenticated
-  USING (created_by = auth.uid() AND approved = false);
+  USING (user_id = auth.uid() AND approved = false);
 
--- Policy for users to create foods
-CREATE POLICY "Users can create foods"
-  ON foods
+-- Users can insert their own foods
+CREATE POLICY "Users can insert their own foods"
+  ON public.foods
   FOR INSERT
   TO authenticated
-  WITH CHECK (true);
+  WITH CHECK (user_id = auth.uid());
 
--- Policy for users to update their own foods
+-- Users can update their own foods
 CREATE POLICY "Users can update their own foods"
-  ON foods
+  ON public.foods
   FOR UPDATE
   TO authenticated
-  USING (created_by = auth.uid());
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
 
--- Policy for admins to update any food
-CREATE POLICY "Admins can update any food"
-  ON foods
-  FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND email = 'AdminEatWise@gmail.com'
-    )
-  );
-
--- Policy for admins to delete any food
-CREATE POLICY "Admins can delete any food"
-  ON foods
+-- Users can delete their own foods
+CREATE POLICY "Users can delete their own foods"
+  ON public.foods
   FOR DELETE
   TO authenticated
+  USING (user_id = auth.uid());
+
+-- Admins can manage all foods
+CREATE POLICY "Admins can manage all foods"
+  ON public.foods
+  TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid() AND email = 'AdminEatWise@gmail.com'
+      SELECT 1 FROM auth.users
+      WHERE auth.users.id = auth.uid()
+      AND (auth.users.raw_user_meta_data->>'is_admin')::boolean = true
     )
   );
 
--- Trigger to update updated_at on update
-CREATE TRIGGER update_foods_updated_at
-BEFORE UPDATE ON foods
-FOR EACH ROW
-EXECUTE FUNCTION update_updated_at_column();
+-- Create function to check if user is admin
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM auth.users
+    WHERE auth.users.id = auth.uid()
+    AND (auth.users.raw_user_meta_data->>'is_admin')::boolean = true
+  );
+$$;
 
--- Insert sample foods
-INSERT INTO foods (name, calories, protein, carbs, fat, fiber, serving, unit, category, image, approved)
-VALUES 
+-- Add initial foods data
+INSERT INTO public.foods (name, calories, protein, carbs, fat, fiber, serving, unit, category, image, approved)
+VALUES
   ('Chicken Breast', 165, 31, 0, 3.6, 0, 100, 'g', 'protein', 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
   ('White Rice', 130, 2.7, 28, 0.3, 0.4, 100, 'g', 'carbs', 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
   ('Broccoli', 34, 2.8, 6.6, 0.4, 2.6, 100, 'g', 'vegetables', 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
   ('Olive Oil', 884, 0, 0, 100, 0, 100, 'ml', 'fats', 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
   ('Apples', 52, 0.3, 14, 0.2, 2.4, 100, 'g', 'fruits', 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;

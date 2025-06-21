@@ -19,7 +19,8 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-  const { login } = useUser();
+  const userContext = useUser() || { login: async () => ({ success: false, error: 'Authentication service unavailable' }) };
+  const { login } = userContext;
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,36 +62,143 @@ function LoginPage() {
     setLoading(true);
     
     try {
+      // Normalize email to lowercase
+      const normalizedEmail = formData.email.toLowerCase();
+      
       if (isLogin) {
-        // Use the login function from context
+        // Special handling for admin login
+        if (normalizedEmail === 'admineatwise@gmail.com') {
+          try {
+            // First, ensure admin email is confirmed
+            const { error: confirmError } = await supabase.rpc('confirm_admin_email', { 
+              admin_email: normalizedEmail 
+            });
+            
+            if (confirmError) {
+              console.error('Error confirming admin email:', confirmError);
+              // Continue with login attempt even if confirmation fails
+            }
+            
+            // Try to sign in
+            const { data, error } = await supabase.auth.signInWithPassword({
+              email: normalizedEmail,
+              password: formData.password
+            });
+            
+            if (error) {
+              // If login failed, check if we need to create the admin account
+              if (error.message.includes('Invalid login credentials')) {
+                // Try to create admin user
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                  email: normalizedEmail,
+                  password: formData.password
+                });
+                
+                if (signUpError) {
+                  if (signUpError.message.includes('invalid')) {
+                    setError('Invalid email format. Please check the email address.');
+                  } else {
+                    setError(signUpError.message);
+                  }
+                  setLoading(false);
+                  return;
+                }
+                
+                // Confirm the email immediately
+                await supabase.rpc('confirm_admin_email', { 
+                  admin_email: normalizedEmail 
+                });
+                
+                // Try to sign in again
+                const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+                  email: normalizedEmail,
+                  password: formData.password
+                });
+                
+                if (retryError) {
+                  setError(retryError.message);
+                  setLoading(false);
+                  return;
+                }
+                
+                // Create admin profile if needed
+                await createAdminProfile(retryData.user.id, normalizedEmail);
+                
+                navigate('/admin/dashboard');
+                return;
+              } else {
+                setError(error.message);
+                setLoading(false);
+                return;
+              }
+            }
+            
+            // Login successful, check if profile exists
+            await createAdminProfile(data.user.id, normalizedEmail);
+            
+            navigate('/admin/dashboard');
+            return;
+          } catch (err) {
+            console.error('Admin login error:', err);
+            setError('An error occurred during admin login. Please try again.');
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // Regular user login
         const result = await login(formData.email, formData.password);
         
         if (result.success) {
-          // Redirect admin users to admin dashboard
-          if (formData.email === 'AdminEatWise@gmail.com') {
-            navigate('/admin/dashboard');
-          } else {
-            navigate('/dashboard');
-          }
+          navigate('/dashboard');
         } else {
           setError(result.error || 'Invalid credentials');
         }
       } else {
         // Register new user
         const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password
+          email: normalizedEmail,
+          password: formData.password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: {
+              name: formData.name
+            }
+          }
         });
         
         if (error) {
           setError(error.message);
         } else {
+          // If email confirmation is required, handle it
+          if (data?.user?.identities?.length === 0) {
+            setError('This email is already registered. Please check your email for confirmation link or try signing in.');
+            setLoading(false);
+            return;
+          }
+          
+          // Automatically sign in after signup (bypassing email confirmation)
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password: formData.password
+          });
+          
+          if (signInError) {
+            if (signInError.message.includes('Email not confirmed')) {
+              setError('Account created but email verification is required. Please check your email.');
+            } else {
+              setError(signInError.message);
+            }
+            setLoading(false);
+            return;
+          }
+          
           // Create profile for new user
           const { error: profileError } = await supabase
             .from('profiles')
             .insert([{
               id: data.user.id,
-              email: formData.email,
+              email: normalizedEmail,
               name: formData.name,
               measurement_system: 'metric',
               daily_calorie_goal: 2000,
@@ -114,6 +222,41 @@ function LoginPage() {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Helper function to create admin profile if it doesn't exist
+  const createAdminProfile = async (userId, email) => {
+    try {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+        
+      if (!existingProfile) {
+        // Create admin profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: userId,
+            email: email,
+            name: 'Admin',
+            measurement_system: 'metric',
+            daily_calorie_goal: 2000,
+            protein_goal: 120,
+            carbs_goal: 250,
+            fat_goal: 70,
+            water_goal: 8
+          }]);
+          
+        if (profileError) {
+          console.error('Error creating admin profile:', profileError);
+        }
+      }
+    } catch (err) {
+      console.error('Error checking/creating admin profile:', err);
     }
   };
   

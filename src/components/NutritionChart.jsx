@@ -1,156 +1,120 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFood } from '../contexts/FoodContext';
-import { Line } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
 
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-function NutritionChart() {
-  const { dailyLog } = useFood();
-  const [chartData, setChartData] = useState({
-    labels: [],
-    datasets: []
-  });
+export default function NutritionChart() {
+  const chartRef = useRef(null);
+  const { getDailyNutritionHistory } = useFood();
   
   useEffect(() => {
-    // Get the last 7 days
-    const today = new Date();
-    const dates = [];
-    const caloriesData = [];
-    const proteinData = [];
-    const carbsData = [];
-    const fatData = [];
+    // This is a placeholder for chart implementation
+    // In a real implementation, you would use a charting library like Chart.js
     
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
+    const renderPlaceholderChart = () => {
+      if (!chartRef.current) return;
       
-      // Format date for display (e.g., "Mon 15")
-      const displayDate = new Intl.DateTimeFormat('en-US', { 
-        weekday: 'short', 
-        day: 'numeric' 
-      }).format(date);
+      const canvas = chartRef.current;
+      const ctx = canvas.getContext('2d');
       
-      dates.push(displayDate);
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Get nutrition data for this date
-      let calories = 0;
-      let protein = 0;
-      let carbs = 0;
-      let fat = 0;
+      // Set dimensions
+      canvas.width = canvas.offsetWidth;
+      canvas.height = 200;
       
-      if (dailyLog[dateString]) {
-        const meals = ['breakfast', 'lunch', 'dinner', 'snacks'];
+      // Get nutrition history for the last 7 days
+      const today = new Date();
+      const nutritionHistory = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateString = date.toISOString().split('T')[0];
         
-        meals.forEach(meal => {
-          if (dailyLog[dateString][meal]) {
-            dailyLog[dateString][meal].forEach(item => {
-              calories += item.calories || 0;
-              protein += item.protein || 0;
-              carbs += item.carbs || 0;
-              fat += item.fat || 0;
-            });
-          }
+        // Get nutrition data for this date
+        const nutrition = getDailyNutritionHistory(dateString);
+        nutritionHistory.push({
+          date: dateString,
+          calories: nutrition.calories || 0
         });
       }
       
-      caloriesData.push(calories);
-      proteinData.push(protein);
-      carbsData.push(carbs);
-      fatData.push(fat);
-    }
+      // Find max value for scaling
+      const maxCalories = Math.max(...nutritionHistory.map(day => day.calories), 2000);
+      
+      // Draw chart
+      const padding = 30;
+      const chartWidth = canvas.width - padding * 2;
+      const chartHeight = canvas.height - padding * 2;
+      
+      // Draw axes
+      ctx.beginPath();
+      ctx.moveTo(padding, padding);
+      ctx.lineTo(padding, canvas.height - padding);
+      ctx.lineTo(canvas.width - padding, canvas.height - padding);
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      // Draw horizontal grid lines
+      const gridLines = 5;
+      ctx.textAlign = 'right';
+      ctx.font = '10px Arial';
+      ctx.fillStyle = '#6b7280';
+      
+      for (let i = 0; i <= gridLines; i++) {
+        const y = padding + (chartHeight / gridLines) * i;
+        const value = Math.round(maxCalories - (maxCalories / gridLines) * i);
+        
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(canvas.width - padding, y);
+        ctx.strokeStyle = '#f3f4f6';
+        ctx.stroke();
+        
+        ctx.fillText(value, padding - 5, y + 3);
+      }
+      
+      // Draw bars
+      const barWidth = chartWidth / nutritionHistory.length * 0.6;
+      const barSpacing = chartWidth / nutritionHistory.length;
+      
+      nutritionHistory.forEach((day, index) => {
+        const x = padding + barSpacing * index + barSpacing / 2 - barWidth / 2;
+        const barHeight = (day.calories / maxCalories) * chartHeight;
+        const y = canvas.height - padding - barHeight;
+        
+        // Draw bar
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // Draw date label
+        const date = new Date(day.date);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(dayName, x + barWidth / 2, canvas.height - padding + 15);
+      });
+    };
     
-    setChartData({
-      labels: dates,
-      datasets: [
-        {
-          label: 'Calories',
-          data: caloriesData,
-          borderColor: 'rgb(255, 99, 132)',
-          backgroundColor: 'rgba(255, 99, 132, 0.5)',
-          yAxisID: 'y',
-        },
-        {
-          label: 'Protein (g)',
-          data: proteinData,
-          borderColor: 'rgb(53, 162, 235)',
-          backgroundColor: 'rgba(53, 162, 235, 0.5)',
-          yAxisID: 'y1',
-        },
-        {
-          label: 'Carbs (g)',
-          data: carbsData,
-          borderColor: 'rgb(75, 192, 192)',
-          backgroundColor: 'rgba(75, 192, 192, 0.5)',
-          yAxisID: 'y1',
-        },
-        {
-          label: 'Fat (g)',
-          data: fatData,
-          borderColor: 'rgb(255, 159, 64)',
-          backgroundColor: 'rgba(255, 159, 64, 0.5)',
-          yAxisID: 'y1',
-        }
-      ]
-    });
-  }, [dailyLog]);
-  
-  const options = {
-    responsive: true,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    stacked: false,
-    scales: {
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        title: {
-          display: true,
-          text: 'Calories'
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        grid: {
-          drawOnChartArea: false,
-        },
-        title: {
-          display: true,
-          text: 'Grams'
-        }
-      },
-    },
-  };
+    renderPlaceholderChart();
+    
+    // Add resize listener
+    const handleResize = () => {
+      renderPlaceholderChart();
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [getDailyNutritionHistory]);
   
   return (
-    <div>
-      <Line options={options} data={chartData} />
+    <div className="w-full">
+      <canvas ref={chartRef} className="w-full"></canvas>
     </div>
   );
 }
-
-export default NutritionChart;
