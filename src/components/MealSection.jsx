@@ -1,127 +1,91 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useFood } from '../contexts/FoodContext';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { useState } from 'react'
+import { useFood } from '../contexts/FoodContext'
+import { FaPlus, FaTrash } from 'react-icons/fa'
+import FoodSelector from './FoodSelector'
 
-export default function MealSection({ date, mealType, title }) {
-  const { getMealEntries, removeFoodFromLog } = useFood();
-  const navigate = useNavigate();
-  const [isExpanded, setIsExpanded] = useState(mealType === 'all');
+function MealSection({ date, mealType, title }) {
+  const { dailyLog, removeFoodFromLog } = useFood()
+  const [showFoodSelector, setShowFoodSelector] = useState(false)
   
-  // Get meal entries for this meal type
-  const entries = getMealEntries(date, mealType);
-  
-  // Calculate total nutrition for this meal
-  const totalNutrition = entries.reduce(
-    (total, entry) => {
-      return {
-        calories: total.calories + (entry.food.calories * entry.servings),
-        protein: total.protein + (entry.food.protein * entry.servings),
-        carbs: total.carbs + (entry.food.carbs * entry.servings),
-        fat: total.fat + (entry.food.fat * entry.servings)
-      };
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
-  );
-  
-  // Format number to have at most 1 decimal place
-  const formatNumber = (num) => {
-    return Math.round(num * 10) / 10;
-  };
-  
-  // Handle removing a food entry
-  const handleRemove = (entryId) => {
-    if (window.confirm('Are you sure you want to remove this food from your log?')) {
-      removeFoodFromLog(date, entryId);
+  // Get all food items for the day, regardless of meal type
+  const getAllMealItems = () => {
+    if (!dailyLog[date]) return [];
+    
+    const allItems = [];
+    
+    // If mealType is "all", combine all meal types
+    if (mealType === "all") {
+      const mealTypes = ["breakfast", "lunch", "dinner", "snacks"];
+      mealTypes.forEach(type => {
+        if (dailyLog[date][type]) {
+          allItems.push(...dailyLog[date][type]);
+        }
+      });
+    } else if (dailyLog[date][mealType]) {
+      // Otherwise, just get the specific meal type
+      allItems.push(...dailyLog[date][mealType]);
     }
+    
+    return allItems;
   };
   
-  // Navigate to add food page
-  const handleAddFood = () => {
-    navigate('/log', { state: { date, mealType } });
-  };
+  const mealItems = getAllMealItems();
+  
+  const totalCalories = mealItems.reduce((sum, item) => sum + item.calories, 0);
   
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div 
-        className="px-4 py-3 bg-gray-50 flex justify-between items-center cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
+    <div className="card mb-4">
+      <div className="flex justify-between items-center mb-4">
         <div className="flex items-center">
-          <h3 className="font-medium">{title}</h3>
-          {entries.length > 0 && (
-            <span className="ml-2 text-sm text-gray-500">
-              ({formatNumber(totalNutrition.calories)} kcal)
-            </span>
-          )}
+          <h3 className="text-lg font-medium">{title}</h3>
         </div>
-        
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleAddFood();
-          }}
-          className="p-1 rounded-full hover:bg-gray-200"
-          aria-label="Add food"
-        >
-          <PlusIcon className="h-5 w-5 text-green-600" />
-        </button>
+        <span className="text-gray-600 font-medium">{totalCalories} kcal</span>
       </div>
       
-      {isExpanded && (
-        <div className="px-4 py-2">
-          {entries.length === 0 ? (
-            <p className="text-gray-500 text-sm py-2">No foods logged for this meal yet.</p>
-          ) : (
-            <div className="divide-y">
-              {entries.map((entry) => (
-                <div key={entry.id} className="py-2 flex justify-between items-center">
-                  <div>
-                    <div className="font-medium">{entry.food.name}</div>
-                    <div className="text-sm text-gray-500">
-                      {entry.servings} {entry.servings === 1 ? 'serving' : 'servings'} ({entry.food.servingSize} {entry.food.servingUnit})
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <div className="font-medium">{formatNumber(entry.food.calories * entry.servings)} kcal</div>
-                      <div className="text-xs text-gray-500">
-                        P: {formatNumber(entry.food.protein * entry.servings)}g | 
-                        C: {formatNumber(entry.food.carbs * entry.servings)}g | 
-                        F: {formatNumber(entry.food.fat * entry.servings)}g
-                      </div>
-                    </div>
-                    
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => handleRemove(entry.id)}
-                        className="p-1 rounded-full hover:bg-red-100 text-red-600"
-                        aria-label="Remove food"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {/* Summary row */}
-              <div className="py-2 flex justify-between items-center font-medium">
-                <div>Total</div>
-                <div className="text-right">
-                  <div>{formatNumber(totalNutrition.calories)} kcal</div>
-                  <div className="text-xs text-gray-600">
-                    P: {formatNumber(totalNutrition.protein)}g | 
-                    C: {formatNumber(totalNutrition.carbs)}g | 
-                    F: {formatNumber(totalNutrition.fat)}g
-                  </div>
-                </div>
+      {mealItems.length > 0 ? (
+        <ul className="divide-y divide-gray-200">
+          {mealItems.map(item => (
+            <li key={item.id} className="py-3 flex justify-between items-center">
+              <div>
+                <p className="font-medium">{item.name}</p>
+                <p className="text-sm text-gray-600">{item.quantity}g • {item.calories} kcal</p>
               </div>
-            </div>
-          )}
-        </div>
+              <div className="flex items-center">
+                <p className="text-xs text-gray-500 mr-3">
+                  P: {item.protein}g • C: {item.carbs}g • F: {item.fat}g
+                </p>
+                <button 
+                  onClick={() => removeFoodFromLog(date, item.mealType || "all", item.id)}
+                  className="text-red-500 hover:text-red-700"
+                  aria-label="Delete food"
+                >
+                  <FaTrash />
+                </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-gray-500 text-center py-4">You haven't added any food yet</p>
+      )}
+      
+      <button 
+        onClick={() => setShowFoodSelector(true)}
+        className="mt-4 flex items-center justify-center w-full py-2 border border-dashed border-gray-300 rounded-lg text-primary hover:bg-gray-50 transition-colors"
+      >
+        <FaPlus className="mr-2" />
+        <span>Add food</span>
+      </button>
+      
+      {showFoodSelector && (
+        <FoodSelector 
+          date={date}
+          mealType={mealType}
+          onClose={() => setShowFoodSelector(false)}
+        />
       )}
     </div>
-  );
+  )
 }
+
+export default MealSection

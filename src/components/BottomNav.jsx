@@ -4,8 +4,7 @@ import { useUser } from '../contexts/UserContext'
 
 function BottomNav() {
   const location = useLocation()
-  const userContext = useUser() || { user: { isLoggedIn: false, isAdmin: false } };
-  const { user } = userContext;
+  const { user } = useUser()
   
   const isActive = (path) => {
     return location.pathname === path

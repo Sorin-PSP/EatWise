@@ -1,62 +1,54 @@
-import { useState } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { format, addDays, subDays, parseISO } from 'date-fns'
+import { enUS } from 'date-fns/locale'
+import { FaChevronLeft, FaChevronRight, FaCalendarAlt } from 'react-icons/fa'
 
-export default function DateSelector({ currentDate, setCurrentDate }) {
-  // Format the date for display
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('en-US', options);
-  };
-
-  // Navigate to previous day
+function DateSelector({ currentDate, setCurrentDate }) {
+  const formattedDate = format(parseISO(currentDate), 'EEEE, MMMM d, yyyy', { locale: enUS })
+  
   const goToPreviousDay = () => {
-    const date = new Date(currentDate);
-    date.setDate(date.getDate() - 1);
-    setCurrentDate(date.toISOString().split('T')[0]);
-  };
-
-  // Navigate to next day
+    const newDate = subDays(parseISO(currentDate), 1)
+    setCurrentDate(format(newDate, 'yyyy-MM-dd'))
+  }
+  
   const goToNextDay = () => {
-    const date = new Date(currentDate);
-    date.setDate(date.getDate() + 1);
-    setCurrentDate(date.toISOString().split('T')[0]);
-  };
-
-  // Go to today
+    const newDate = addDays(parseISO(currentDate), 1)
+    setCurrentDate(format(newDate, 'yyyy-MM-dd'))
+  }
+  
   const goToToday = () => {
-    const today = new Date();
-    setCurrentDate(today.toISOString().split('T')[0]);
-  };
-
+    setCurrentDate(format(new Date(), 'yyyy-MM-dd'))
+  }
+  
   return (
-    <div className="flex items-center space-x-2">
-      <button
+    <div className="flex items-center justify-between mb-6">
+      <button 
         onClick={goToPreviousDay}
-        className="p-1 rounded-full hover:bg-gray-200"
+        className="p-2 rounded-full hover:bg-gray-200"
         aria-label="Previous day"
       >
-        <ChevronLeftIcon className="h-5 w-5 text-gray-600" />
+        <FaChevronLeft />
       </button>
       
-      <div className="text-sm md:text-base font-medium">
-        {formatDate(currentDate)}
+      <div className="flex items-center">
+        <button 
+          onClick={goToToday}
+          className="flex items-center mr-2 text-primary hover:text-primary-dark"
+        >
+          <FaCalendarAlt className="mr-1" />
+          <span className="text-sm">Today</span>
+        </button>
+        <h2 className="text-lg font-medium capitalize">{formattedDate}</h2>
       </div>
       
-      <button
+      <button 
         onClick={goToNextDay}
-        className="p-1 rounded-full hover:bg-gray-200"
+        className="p-2 rounded-full hover:bg-gray-200"
         aria-label="Next day"
       >
-        <ChevronRightIcon className="h-5 w-5 text-gray-600" />
-      </button>
-      
-      <button
-        onClick={goToToday}
-        className="ml-2 px-3 py-1 text-xs bg-green-100 text-green-800 rounded-md hover:bg-green-200"
-      >
-        Today
+        <FaChevronRight />
       </button>
     </div>
-  );
+  )
 }
+
+export default DateSelector

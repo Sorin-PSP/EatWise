@@ -1,113 +1,128 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FaWeight } from 'react-icons/fa';
+import Card from './Card';
+import { useUser } from '../contexts/UserContext';
 
-export default function WeightTracker({ currentWeight, startWeight, goalWeight, onUpdateWeight }) {
-  const [weight, setWeight] = useState(currentWeight || '');
+function WeightTracker({ 
+  currentWeight: propCurrentWeight, 
+  startWeight: propStartWeight,
+  goalWeight: propGoalWeight,
+  onUpdateWeight,
+  className = '' 
+}) {
+  const { user, getWeightUnit, updateUser } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   
-  // Calculate progress percentage
-  const calculateProgress = () => {
-    if (!startWeight || !goalWeight || startWeight === goalWeight) return 0;
-    
-    const totalChange = startWeight - goalWeight;
-    const currentChange = startWeight - (currentWeight || startWeight);
-    
-    return Math.min(Math.max(Math.round((currentChange / totalChange) * 100), 0), 100);
-  };
+  // Use weight from user profile if available, otherwise use props
+  const currentWeight = user.weight ? parseFloat(user.weight) : propCurrentWeight;
+  const startWeight = user.startWeight ? parseFloat(user.startWeight) : propStartWeight;
+  const goalWeight = user.goalWeight ? parseFloat(user.goalWeight) : propGoalWeight;
   
-  const progress = calculateProgress();
+  const [weightInput, setWeightInput] = useState(currentWeight);
   
-  // Handle form submission
+  // Update weightInput when currentWeight changes
+  useEffect(() => {
+    setWeightInput(currentWeight);
+  }, [currentWeight]);
+  
   const handleSubmit = (e) => {
     e.preventDefault();
+    const newWeight = parseFloat(weightInput);
     
-    if (weight && !isNaN(weight)) {
-      onUpdateWeight(parseFloat(weight));
-      setIsEditing(false);
+    // Update local state via props callback
+    if (onUpdateWeight) {
+      onUpdateWeight(newWeight);
     }
+    
+    // Update user profile
+    updateUser({
+      weight: newWeight,
+      // If start weight isn't set yet, use this as the start weight
+      startWeight: user.startWeight || newWeight
+    });
+    
+    setIsEditing(false);
   };
   
+  // Calculate progress percentage
+  const totalWeightToLose = startWeight - goalWeight;
+  const weightLost = startWeight - currentWeight;
+  const progressPercentage = Math.min(Math.max((weightLost / totalWeightToLose) * 100, 0), 100);
+  
+  // Get the appropriate weight unit
+  const weightUnit = getWeightUnit();
+  
   return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      <div className="flex justify-between items-center mb-4">
+    <Card className={`${className}`}>
+      <div className="flex items-center mb-4">
+        <FaWeight className="text-primary text-xl mr-2" />
         <h3 className="font-medium">Weight Tracker</h3>
-        
-        {!isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="text-sm text-green-600 hover:text-green-700"
-          >
-            Update
-          </button>
-        )}
       </div>
       
-      {isEditing ? (
-        <form onSubmit={handleSubmit} className="mb-4">
-          <div className="flex items-center">
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              step="0.1"
-              min="0"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
-              placeholder="Enter your weight"
-              required
-            />
-            <span className="ml-2 text-gray-500">kg</span>
-          </div>
-          
-          <div className="mt-3 flex justify-end space-x-2">
-            <button
-              type="button"
-              onClick={() => setIsEditing(false)}
-              className="px-3 py-1 text-sm text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-            >
-              Cancel
-            </button>
-            
-            <button
-              type="submit"
-              className="px-3 py-1 text-sm text-white bg-green-600 rounded-md hover:bg-green-700"
-            >
-              Save
-            </button>
-          </div>
-        </form>
-      ) : (
-        <div className="mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <span className="text-2xl font-bold">{currentWeight || '—'}</span>
-              <span className="text-gray-500 ml-1">kg</span>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          {isEditing ? (
+            <form onSubmit={handleSubmit} className="flex items-center">
+              <input
+                type="number"
+                step="0.1"
+                min="30"
+                max="300"
+                value={weightInput}
+                onChange={(e) => setWeightInput(e.target.value)}
+                className="w-20 p-1 border border-gray-300 rounded mr-2"
+                autoFocus
+              />
+              <span className="mr-2">{weightUnit}</span>
+              <button 
+                type="submit"
+                className="bg-primary text-white text-sm py-1 px-2 rounded"
+              >
+                Save
+              </button>
+            </form>
+          ) : (
+            <div className="flex items-baseline">
+              <span className="text-3xl font-bold">{currentWeight}</span>
+              <span className="text-gray-600 ml-1">{weightUnit}</span>
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="ml-2 text-sm text-primary hover:text-primary-dark"
+              >
+                Update
+              </button>
             </div>
-            
-            <div className="text-sm text-gray-500">
-              {progress}% to goal
-            </div>
-          </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-            <div 
-              className="h-2 rounded-full bg-green-500" 
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>Start: {startWeight || '—'} kg</span>
-            <span>Goal: {goalWeight || '—'} kg</span>
+          )}
+        </div>
+        
+        <div className="text-right">
+          <div className="text-sm text-gray-600">Goal</div>
+          <div className="font-medium">{goalWeight} {weightUnit}</div>
+        </div>
+      </div>
+      
+      <div className="relative pt-1">
+        <div className="flex mb-2 items-center justify-between">
+          <div>
+            <span className="text-xs font-semibold inline-block text-primary">
+              {progressPercentage.toFixed(0)}% Complete
+            </span>
           </div>
         </div>
-      )}
-      
-      <div className="text-xs text-gray-500">
-        {currentWeight ? (
-          <p>Last updated: Today</p>
-        ) : (
-          <p>No weight data recorded yet.</p>
-        )}
+        <div className="flex h-2 mb-4 overflow-hidden text-xs bg-primary-light rounded">
+          <div 
+            style={{ width: `${progressPercentage}%` }} 
+            className="flex flex-col justify-center text-center text-white bg-primary transition-all duration-500 ease-out"
+          ></div>
+        </div>
+        <div className="flex justify-between text-xs text-gray-600">
+          <span>Start: {startWeight} {weightUnit}</span>
+          <span>Current: {currentWeight} {weightUnit}</span>
+          <span>Goal: {goalWeight} {weightUnit}</span>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
+
+export default WeightTracker;

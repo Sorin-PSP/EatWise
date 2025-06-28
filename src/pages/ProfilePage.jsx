@@ -22,21 +22,6 @@ function ProfilePage() {
   
   const [calculatedCalories, setCalculatedCalories] = useState(null);
   
-  // Update form data when user data changes
-  useEffect(() => {
-    setFormData({
-      name: user.name || '',
-      age: user.age || '',
-      gender: user.gender || 'female',
-      weight: user.weight || '',
-      height: user.height || '',
-      activityLevel: user.activityLevel || 'moderate',
-      goal: user.goal || 'maintain',
-      dailyCalorieGoal: user.dailyCalorieGoal || '',
-      measurementSystem: user.measurementSystem || 'metric'
-    });
-  }, [user]);
-  
   // Update form data when measurement system changes
   useEffect(() => {
     if (formData.weight && formData.height) {
@@ -124,17 +109,13 @@ function ProfilePage() {
     setFormData(prev => ({ ...prev, dailyCalorieGoal: calories }));
   };
   
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     // Save user data
-    const result = await updateUser({ ...formData });
+    updateUser({ ...formData });
     
-    if (result.success) {
-      alert('Profile saved successfully!');
-    } else {
-      alert(`Error saving profile: ${result.error}`);
-    }
+    alert('Profile saved successfully!');
   };
   
   // Get the appropriate weight and height units based on the selected measurement system

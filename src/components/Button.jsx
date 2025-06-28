@@ -1,39 +1,82 @@
 import React from 'react';
 
-export default function Button({ 
+function Button({ 
   children, 
+  onClick, 
+  type = 'button', 
   variant = 'primary', 
   size = 'md', 
-  icon: Icon, 
   className = '', 
-  ...props 
+  disabled = false,
+  fullWidth = false,
+  icon: Icon = null,
+  iconPosition = 'left'
 }) {
-  // Define base classes
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-md focus:outline-none transition-colors';
-  
-  // Define variant classes
-  const variantClasses = {
-    primary: 'bg-green-600 hover:bg-green-700 text-white',
-    secondary: 'bg-blue-600 hover:bg-blue-700 text-white',
-    outline: 'border border-gray-300 bg-white hover:bg-gray-50 text-gray-700',
-    danger: 'bg-red-600 hover:bg-red-700 text-white',
-    ghost: 'bg-transparent hover:bg-gray-100 text-gray-700',
+  const getVariantClasses = () => {
+    switch (variant) {
+      case 'primary':
+        return 'bg-primary hover:bg-primary-dark text-white';
+      case 'secondary':
+        return 'bg-secondary hover:bg-secondary-dark text-white';
+      case 'accent':
+        return 'bg-accent hover:bg-accent-dark text-white';
+      case 'success':
+        return 'bg-success hover:bg-success-dark text-white';
+      case 'warning':
+        return 'bg-warning hover:bg-warning-dark text-white';
+      case 'error':
+        return 'bg-error hover:bg-error-dark text-white';
+      case 'outline':
+        return 'bg-transparent border border-primary text-primary hover:bg-primary/5';
+      case 'ghost':
+        return 'bg-transparent hover:bg-gray-100 text-gray-700';
+      default:
+        return 'bg-primary hover:bg-primary-dark text-white';
+    }
   };
-  
-  // Define size classes
-  const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+
+  const getSizeClasses = () => {
+    switch (size) {
+      case 'xs':
+        return 'text-xs px-2 py-1';
+      case 'sm':
+        return 'text-sm px-3 py-1.5';
+      case 'md':
+        return 'text-base px-4 py-2';
+      case 'lg':
+        return 'text-lg px-5 py-2.5';
+      case 'xl':
+        return 'text-xl px-6 py-3';
+      default:
+        return 'text-base px-4 py-2';
+    }
   };
-  
-  // Combine classes
-  const buttonClasses = `${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`;
-  
+
   return (
-    <button className={buttonClasses} {...props}>
-      {Icon && <Icon className={`h-5 w-5 ${children ? 'mr-2' : ''}`} />}
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`
+        ${getVariantClasses()}
+        ${getSizeClasses()}
+        ${fullWidth ? 'w-full' : ''}
+        rounded-md font-medium transition-colors duration-200
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary
+        disabled:opacity-50 disabled:cursor-not-allowed
+        flex items-center justify-center
+        ${className}
+      `}
+    >
+      {Icon && iconPosition === 'left' && (
+        <Icon className={`${children ? 'mr-2' : ''}`} />
+      )}
       {children}
+      {Icon && iconPosition === 'right' && (
+        <Icon className={`${children ? 'ml-2' : ''}`} />
+      )}
     </button>
   );
 }
+
+export default Button;
