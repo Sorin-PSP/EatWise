@@ -1,123 +1,132 @@
 /*
-  # Creare tabel pentru alimente
-  
+  # Create Foods Table
+
   1. New Tables
     - `foods`
       - `id` (uuid, primary key)
-      - `name` (text, not null)
-      - `calories` (integer, not null)
-      - `protein` (numeric, not null)
-      - `carbs` (numeric, not null)
-      - `fat` (numeric, not null)
-      - `fiber` (numeric)
-      - `serving` (numeric, not null)
-      - `unit` (text, not null)
-      - `category` (text, not null)
-      - `image` (text)
-      - `approved` (boolean, default true)
-      - `user_id` (uuid, references auth.users)
-      - `created_at` (timestamptz, default now())
-  
+      - `name` (text, unique) - numele alimentului
+      - `calories` (numeric) - calorii per porție
+      - `protein` (numeric) - proteine în grame
+      - `carbs` (numeric) - carbohidrați în grame
+      - `fat` (numeric) - grăsimi în grame
+      - `fiber` (numeric) - fibre în grame
+      - `serving` (numeric) - mărimea porției
+      - `unit` (text) - unitatea de măsură (g, ml, etc.)
+      - `category` (text) - categoria alimentului
+      - `image` (text) - URL imagine
+      - `approved` (boolean) - dacă alimentul este aprobat
+      - `user_id` (uuid) - utilizatorul care a adăugat alimentul
+      - `created_at` (timestamp)
+      - `updated_at` (timestamp)
+
   2. Security
     - Enable RLS on `foods` table
-    - Add policies for authenticated users to read all approved foods
+    - Add policies for reading approved foods
     - Add policies for users to manage their own foods
     - Add policies for admins to manage all foods
+
+  3. Indexes
+    - Index on name for fast searching
+    - Index on category for filtering
+    - Index on approved status
 */
 
--- Create foods table
-CREATE TABLE IF NOT EXISTS public.foods (
+CREATE TABLE IF NOT EXISTS foods (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
-  calories integer NOT NULL,
-  protein numeric NOT NULL,
-  carbs numeric NOT NULL,
-  fat numeric NOT NULL,
-  fiber numeric DEFAULT 0,
-  serving numeric NOT NULL,
-  unit text NOT NULL,
-  category text NOT NULL,
+  calories numeric NOT NULL CHECK (calories >= 0),
+  protein numeric NOT NULL DEFAULT 0 CHECK (protein >= 0),
+  carbs numeric NOT NULL DEFAULT 0 CHECK (carbs >= 0),
+  fat numeric NOT NULL DEFAULT 0 CHECK (fat >= 0),
+  fiber numeric DEFAULT 0 CHECK (fiber >= 0),
+  serving numeric NOT NULL DEFAULT 100 CHECK (serving > 0),
+  unit text NOT NULL DEFAULT 'g',
+  category text NOT NULL DEFAULT 'other' CHECK (category IN ('protein', 'carbs', 'fats', 'vegetables', 'fruits', 'dairy', 'other')),
   image text,
-  approved boolean DEFAULT true,
-  user_id uuid REFERENCES auth.users(id),
-  created_at timestamptz DEFAULT now()
+  approved boolean NOT NULL DEFAULT false,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
 );
 
--- Create index for faster searches
-CREATE INDEX IF NOT EXISTS foods_name_idx ON public.foods USING gin (name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS foods_category_idx ON public.foods (category);
-CREATE INDEX IF NOT EXISTS foods_user_id_idx ON public.foods (user_id);
+-- Create unique constraint on name (case insensitive)
+CREATE UNIQUE INDEX IF NOT EXISTS foods_name_unique_idx ON foods (LOWER(name));
 
--- Enable row level security
-ALTER TABLE public.foods ENABLE ROW LEVEL SECURITY;
+-- Create indexes for performance
+CREATE INDEX IF NOT EXISTS foods_category_idx ON foods (category);
+CREATE INDEX IF NOT EXISTS foods_approved_idx ON foods (approved);
+CREATE INDEX IF NOT EXISTS foods_user_id_idx ON foods (user_id);
+CREATE INDEX IF NOT EXISTS foods_name_search_idx ON foods USING gin (to_tsvector('english', name));
 
--- Create policies
--- Everyone can read approved foods
+-- Enable RLS
+ALTER TABLE foods ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Everyone can read approved foods
 CREATE POLICY "Anyone can read approved foods"
-  ON public.foods
+  ON foods
   FOR SELECT
   USING (approved = true);
 
--- Users can read their own unapproved foods
-CREATE POLICY "Users can read their own unapproved foods"
-  ON public.foods
+-- Policy: Users can read their own foods (approved or not)
+CREATE POLICY "Users can read own foods"
+  ON foods
   FOR SELECT
   TO authenticated
-  USING (user_id = auth.uid() AND approved = false);
+  USING (auth.uid() = user_id);
 
--- Users can insert their own foods
-CREATE POLICY "Users can insert their own foods"
-  ON public.foods
+-- Policy: Users can insert their own foods
+CREATE POLICY "Users can insert own foods"
+  ON foods
   FOR INSERT
   TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (auth.uid() = user_id);
 
--- Users can update their own foods
-CREATE POLICY "Users can update their own foods"
-  ON public.foods
+-- Policy: Users can update their own foods
+CREATE POLICY "Users can update own foods"
+  ON foods
   FOR UPDATE
   TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
--- Users can delete their own foods
-CREATE POLICY "Users can delete their own foods"
-  ON public.foods
+-- Policy: Users can delete their own foods
+CREATE POLICY "Users can delete own foods"
+  ON foods
   FOR DELETE
   TO authenticated
-  USING (user_id = auth.uid());
+  USING (auth.uid() = user_id);
 
--- Admins can manage all foods
+-- Policy: Admins can manage all foods
 CREATE POLICY "Admins can manage all foods"
-  ON public.foods
+  ON foods
+  FOR ALL
   TO authenticated
   USING (
     EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE auth.users.id = auth.uid()
-      AND (auth.users.raw_user_meta_data->>'is_admin')::boolean = true
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.raw_user_meta_data->>'is_admin' = 'true'
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = auth.uid() 
+      AND auth.users.raw_user_meta_data->>'is_admin' = 'true'
     )
   );
 
--- Create function to check if user is admin
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean
-LANGUAGE sql
-SECURITY DEFINER
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM auth.users
-    WHERE auth.users.id = auth.uid()
-    AND (auth.users.raw_user_meta_data->>'is_admin')::boolean = true
-  );
-$$;
+-- Function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
 
--- Add initial foods data
-INSERT INTO public.foods (name, calories, protein, carbs, fat, fiber, serving, unit, category, image, approved)
-VALUES
-  ('Chicken Breast', 165, 31, 0, 3.6, 0, 100, 'g', 'protein', 'https://images.pexels.com/photos/2338407/pexels-photo-2338407.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
-  ('White Rice', 130, 2.7, 28, 0.3, 0.4, 100, 'g', 'carbs', 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
-  ('Broccoli', 34, 2.8, 6.6, 0.4, 2.6, 100, 'g', 'vegetables', 'https://images.pexels.com/photos/399629/pexels-photo-399629.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
-  ('Olive Oil', 884, 0, 0, 100, 0, 100, 'ml', 'fats', 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking.jpg?auto=compress&cs=tinysrgb&w=1260&h=750', true),
-  ('Apples', 52, 0.3, 14, 0.2, 2.4, 100, 'g', 'fruits', 'https://images.pexels.com/photos/1510392/pexels-photo-1510392.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750', true)
-ON CONFLICT (id) DO NOTHING;
+-- Trigger to automatically update updated_at
+CREATE TRIGGER update_foods_updated_at
+  BEFORE UPDATE ON foods
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
