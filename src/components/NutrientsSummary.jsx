@@ -1,6 +1,7 @@
 import React from 'react';
 import Card from './Card';
 import NutrientProgressCircle from './NutrientProgressCircle';
+import { formatNutrient } from '../utils/formatters';
 
 function NutrientsSummary({ 
   protein = 0, 
@@ -17,21 +18,21 @@ function NutrientsSummary({
       
       <div className="flex flex-wrap justify-around">
         <NutrientProgressCircle
-          value={protein}
+          value={formatNutrient(protein)}
           max={proteinGoal}
           title="Protein"
           color="primary"
         />
         
         <NutrientProgressCircle
-          value={carbs}
+          value={formatNutrient(carbs)}
           max={carbsGoal}
           title="Carbs"
           color="secondary"
         />
         
         <NutrientProgressCircle
-          value={fat}
+          value={formatNutrient(fat)}
           max={fatGoal}
           title="Fat"
           color="accent"

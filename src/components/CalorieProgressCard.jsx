@@ -2,6 +2,7 @@ import React from 'react';
 import { FaFire } from 'react-icons/fa';
 import Card from './Card';
 import ProgressBar from './ProgressBar';
+import { formatCalories, formatPercentage } from '../utils/formatters';
 
 function CalorieProgressCard({ 
   consumed = 0, 
@@ -27,7 +28,7 @@ function CalorieProgressCard({
       
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm text-gray-600">Consumed</span>
-        <span className="font-medium">{consumed} kcal</span>
+        <span className="font-medium">{formatCalories(consumed)} kcal</span>
       </div>
       
       <ProgressBar 
@@ -41,13 +42,13 @@ function CalorieProgressCard({
       <div className="grid grid-cols-2 gap-4 mt-2">
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-sm text-gray-600">Goal</div>
-          <div className="font-medium text-lg">{goal} kcal</div>
+          <div className="font-medium text-lg">{formatCalories(goal)} kcal</div>
         </div>
         
         <div className="bg-gray-50 p-3 rounded-lg">
           <div className="text-sm text-gray-600">Remaining</div>
           <div className={`font-medium text-lg ${remaining < 0 ? 'text-error' : ''}`}>
-            {remaining} kcal
+            {formatCalories(remaining)} kcal
           </div>
         </div>
       </div>

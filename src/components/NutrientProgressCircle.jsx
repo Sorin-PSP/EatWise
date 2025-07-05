@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatNutrient, formatPercentage } from '../utils/formatters';
 
 function NutrientProgressCircle({ 
   value, 
@@ -9,7 +10,8 @@ function NutrientProgressCircle({
   size = 'md',
   className = ''
 }) {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
+  const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+  const percentage = Math.min(Math.max((numericValue / max) * 100, 0), 100);
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
@@ -77,7 +79,7 @@ function NutrientProgressCircle({
         
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={`text-xl font-bold ${getColorClasses().split(' ')[0]}`}>
-            {value}
+            {formatNutrient(numericValue)}
           </span>
           <span className="text-xs text-gray-500">{unit}</span>
         </div>
@@ -85,7 +87,7 @@ function NutrientProgressCircle({
       
       <h4 className="mt-2 text-sm font-medium text-gray-700">{title}</h4>
       <div className="text-xs text-gray-500 mt-1">
-        {Math.round(percentage)}% din {max}{unit}
+        {formatPercentage(percentage)}% din {max}{unit}
       </div>
     </div>
   );

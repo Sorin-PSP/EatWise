@@ -1,135 +1,232 @@
-/**
- * Unit conversion utilities for the EatWise application
- * Handles conversions between metric and imperial measurement systems
- */
+// Unit conversion utilities for different measurement systems
 
-// Conversion factors
-const CONVERSION_FACTORS = {
-  // Weight conversions
-  g_to_oz: 0.03527396, // 1 gram = 0.03527396 ounces
-  oz_to_g: 28.3495,    // 1 ounce = 28.3495 grams
-  g_to_lb: 0.00220462, // 1 gram = 0.00220462 pounds
-  lb_to_g: 453.592,    // 1 pound = 453.592 grams
-  
-  // Volume conversions
-  ml_to_floz: 0.033814, // 1 milliliter = 0.033814 fluid ounces
-  floz_to_ml: 29.5735,  // 1 fluid ounce = 29.5735 milliliters
-  ml_to_cup: 0.00422675, // 1 milliliter = 0.00422675 cups
-  cup_to_ml: 236.588,   // 1 cup = 236.588 milliliters
-};
-
-/**
- * Convert a quantity from one unit to another
- * @param {number} amount - The amount to convert
- * @param {string} fromUnit - The unit to convert from
- * @param {string} toUnit - The unit to convert to
- * @returns {number} - The converted amount
- */
-export function convertQuantity(amount, fromUnit, toUnit) {
-  // If units are the same, return the original amount
-  if (fromUnit === toUnit) {
-    return amount;
+// Weight conversions
+export const convertWeight = (value, fromUnit, toUnit) => {
+  // Convert to grams first
+  let grams;
+  switch (fromUnit.toLowerCase()) {
+    case 'kg':
+    case 'kilogram':
+    case 'kilograms':
+      grams = value * 1000;
+      break;
+    case 'lb':
+    case 'lbs':
+    case 'pound':
+    case 'pounds':
+      grams = value * 453.592;
+      break;
+    case 'oz':
+    case 'ounce':
+    case 'ounces':
+      grams = value * 28.3495;
+      break;
+    case 'g':
+    case 'gram':
+    case 'grams':
+    default:
+      grams = value;
+      break;
   }
   
+  // Convert from grams to target unit
+  switch (toUnit.toLowerCase()) {
+    case 'kg':
+    case 'kilogram':
+    case 'kilograms':
+      return grams / 1000;
+    case 'lb':
+    case 'lbs':
+    case 'pound':
+    case 'pounds':
+      return grams / 453.592;
+    case 'oz':
+    case 'ounce':
+    case 'ounces':
+      return grams / 28.3495;
+    case 'g':
+    case 'gram':
+    case 'grams':
+    default:
+      return grams;
+  }
+};
+
+// Volume conversions
+export const convertVolume = (value, fromUnit, toUnit) => {
+  // Convert to milliliters first
+  let milliliters;
+  switch (fromUnit.toLowerCase()) {
+    case 'l':
+    case 'liter':
+    case 'liters':
+      milliliters = value * 1000;
+      break;
+    case 'fl oz':
+    case 'fluid ounce':
+    case 'fluid ounces':
+      milliliters = value * 29.5735;
+      break;
+    case 'cup':
+    case 'cups':
+      milliliters = value * 236.588;
+      break;
+    case 'tbsp':
+    case 'tablespoon':
+    case 'tablespoons':
+      milliliters = value * 14.7868;
+      break;
+    case 'tsp':
+    case 'teaspoon':
+    case 'teaspoons':
+      milliliters = value * 4.92892;
+      break;
+    case 'ml':
+    case 'milliliter':
+    case 'milliliters':
+    default:
+      milliliters = value;
+      break;
+  }
+  
+  // Convert from milliliters to target unit
+  switch (toUnit.toLowerCase()) {
+    case 'l':
+    case 'liter':
+    case 'liters':
+      return milliliters / 1000;
+    case 'fl oz':
+    case 'fluid ounce':
+    case 'fluid ounces':
+      return milliliters / 29.5735;
+    case 'cup':
+    case 'cups':
+      return milliliters / 236.588;
+    case 'tbsp':
+    case 'tablespoon':
+    case 'tablespoons':
+      return milliliters / 14.7868;
+    case 'tsp':
+    case 'teaspoon':
+    case 'teaspoons':
+      return milliliters / 4.92892;
+    case 'ml':
+    case 'milliliter':
+    case 'milliliters':
+    default:
+      return milliliters;
+  }
+};
+
+// General quantity conversion
+export const convertQuantity = (value, fromUnit, toUnit) => {
+  // Handle piece/count units
+  if (fromUnit === toUnit) return value;
+  
   // Handle weight conversions
-  if (fromUnit === 'g' && toUnit === 'oz') {
-    return amount * CONVERSION_FACTORS.g_to_oz;
-  } else if (fromUnit === 'oz' && toUnit === 'g') {
-    return amount * CONVERSION_FACTORS.oz_to_g;
-  } else if (fromUnit === 'g' && toUnit === 'lb') {
-    return amount * CONVERSION_FACTORS.g_to_lb;
-  } else if (fromUnit === 'lb' && toUnit === 'g') {
-    return amount * CONVERSION_FACTORS.lb_to_g;
+  if (['g', 'kg', 'lb', 'oz'].includes(fromUnit) && ['g', 'kg', 'lb', 'oz'].includes(toUnit)) {
+    return convertWeight(value, fromUnit, toUnit);
   }
   
   // Handle volume conversions
-  if (fromUnit === 'ml' && toUnit === 'fl oz') {
-    return amount * CONVERSION_FACTORS.ml_to_floz;
-  } else if (fromUnit === 'fl oz' && toUnit === 'ml') {
-    return amount * CONVERSION_FACTORS.floz_to_ml;
-  } else if (fromUnit === 'ml' && toUnit === 'cup') {
-    return amount * CONVERSION_FACTORS.ml_to_cup;
-  } else if (fromUnit === 'cup' && toUnit === 'ml') {
-    return amount * CONVERSION_FACTORS.cup_to_ml;
+  if (['ml', 'l', 'fl oz', 'cup', 'tbsp', 'tsp'].includes(fromUnit) && 
+      ['ml', 'l', 'fl oz', 'cup', 'tbsp', 'tsp'].includes(toUnit)) {
+    return convertVolume(value, fromUnit, toUnit);
   }
   
-  // If no conversion is found, return the original amount
-  console.warn(`No conversion found from ${fromUnit} to ${toUnit}`);
-  return amount;
-}
+  // If no conversion available, return original value
+  return value;
+};
 
-/**
- * Convert a food serving between measurement systems
- * @param {number} amount - The serving amount
- * @param {string} unit - The serving unit
- * @param {string} fromSystem - The system to convert from ('metric' or 'imperial')
- * @param {string} toSystem - The system to convert to ('metric' or 'imperial')
- * @returns {object} - Object with converted amount and unit
- */
-export function convertFoodServing(amount, unit, fromSystem, toSystem) {
-  // If systems are the same, return the original serving
+// Convert food serving based on measurement system
+export const convertFoodServing = (serving, unit, fromSystem, toSystem) => {
   if (fromSystem === toSystem) {
-    return { amount, unit };
+    return { amount: serving, unit };
   }
   
-  // Convert from metric to imperial
+  // Metric to Imperial conversions
   if (fromSystem === 'metric' && toSystem === 'imperial') {
-    if (unit === 'g') {
-      // Convert grams to ounces
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.g_to_oz).toFixed(1)),
-        unit: 'oz'
-      };
-    } else if (unit === 'ml') {
-      // Convert milliliters to fluid ounces
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.ml_to_floz).toFixed(1)),
-        unit: 'fl oz'
-      };
+    switch (unit) {
+      case 'g':
+        if (serving >= 453.592) {
+          return { amount: Math.round((serving / 453.592) * 10) / 10, unit: 'lb' };
+        } else {
+          return { amount: Math.round((serving / 28.3495) * 10) / 10, unit: 'oz' };
+        }
+      case 'kg':
+        return { amount: Math.round((serving * 2.20462) * 10) / 10, unit: 'lb' };
+      case 'ml':
+        if (serving >= 236.588) {
+          return { amount: Math.round((serving / 236.588) * 10) / 10, unit: 'cup' };
+        } else {
+          return { amount: Math.round((serving / 29.5735) * 10) / 10, unit: 'fl oz' };
+        }
+      case 'l':
+        return { amount: Math.round((serving / 0.236588) * 10) / 10, unit: 'cup' };
+      default:
+        return { amount: serving, unit };
     }
   }
   
-  // Convert from imperial to metric
+  // Imperial to Metric conversions
   if (fromSystem === 'imperial' && toSystem === 'metric') {
-    if (unit === 'oz') {
-      // Convert ounces to grams
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.oz_to_g).toFixed(1)),
-        unit: 'g'
-      };
-    } else if (unit === 'fl oz') {
-      // Convert fluid ounces to milliliters
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.floz_to_ml).toFixed(1)),
-        unit: 'ml'
-      };
-    } else if (unit === 'lb') {
-      // Convert pounds to grams
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.lb_to_g).toFixed(1)),
-        unit: 'g'
-      };
-    } else if (unit === 'cup') {
-      // Convert cups to milliliters
-      return {
-        amount: Number((amount * CONVERSION_FACTORS.cup_to_ml).toFixed(1)),
-        unit: 'ml'
-      };
+    switch (unit) {
+      case 'lb':
+        return { amount: Math.round((serving * 453.592)), unit: 'g' };
+      case 'oz':
+        return { amount: Math.round((serving * 28.3495)), unit: 'g' };
+      case 'cup':
+        return { amount: Math.round((serving * 236.588)), unit: 'ml' };
+      case 'fl oz':
+        return { amount: Math.round((serving * 29.5735)), unit: 'ml' };
+      case 'tbsp':
+        return { amount: Math.round((serving * 14.7868)), unit: 'ml' };
+      case 'tsp':
+        return { amount: Math.round((serving * 4.92892)), unit: 'ml' };
+      default:
+        return { amount: serving, unit };
     }
   }
   
-  // If no conversion is found, return the original serving
-  return { amount, unit };
-}
+  return { amount: serving, unit };
+};
 
-/**
- * Format a quantity with its unit for display
- * @param {number} amount - The amount to format
- * @param {string} unit - The unit of measurement
- * @returns {string} - Formatted string (e.g., "100 g" or "3.5 oz")
- */
-export function formatQuantity(amount, unit) {
-  // Round to 1 decimal place if not a whole number
-  const formattedAmount = Number.isInteger(amount) ? amount : amount.toFixed(1);
-  return `${formattedAmount} ${unit}`;
-}
+// Get appropriate unit for measurement system
+export const getPreferredUnit = (originalUnit, measurementSystem) => {
+  if (measurementSystem === 'metric') {
+    switch (originalUnit) {
+      case 'lb':
+      case 'oz':
+        return 'g';
+      case 'cup':
+      case 'fl oz':
+      case 'tbsp':
+      case 'tsp':
+        return 'ml';
+      default:
+        return originalUnit;
+    }
+  } else { // imperial
+    switch (originalUnit) {
+      case 'g':
+      case 'kg':
+        return 'oz';
+      case 'ml':
+      case 'l':
+        return 'fl oz';
+      default:
+        return originalUnit;
+    }
+  }
+};
+
+// Format display value with appropriate precision
+export const formatDisplayValue = (value, unit) => {
+  if (value < 1) {
+    return value.toFixed(2);
+  } else if (value < 10) {
+    return value.toFixed(1);
+  } else {
+    return Math.round(value).toString();
+  }
+};
